@@ -1,7 +1,7 @@
 # nodegraph-pyqt
 A generic visual directed dependency graph implementation powered by PyQT/PySide and networkx
 
-The main purpose of this repository is to provide a full-featured dag gui with an underlyig network model aimed to descrive any logic or arbitrary set of processes through a directed graph.
+The main purpose of this repository is to provide a full-featured dag GUI with an underlying network model aimed to describe any logic or arbitrary set of processes through a directed graph.
 
 # Requirements
 
