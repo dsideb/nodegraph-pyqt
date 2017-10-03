@@ -1,0 +1,35 @@
+Nodes:
+
+  Design:
+    * Undefined number of inputs
+    * Single Output
+    * Inputs are on left side of the node
+    * Output is on the righ side of the node
+    * Natural layout flow is left to right
+
+  To do:
+    ☐ Optimize redraw by caching as much as possible any computation
+    ☐ Create a disabled state
+
+Edges:
+
+  Design:
+    * An edge is defined but its parent output and its named input
+    * Edge name is hashed from its parents
+    * A edge is only valid if it doesn't create a loop
+
+  To do:
+    ☐ Create edge interactively
+    ☐ Adjust arrow size (lod bug) and implement dynamic scale
+    ☐ Optimize redraw by caching as much as possible any computation
+
+Nodegraph view:
+
+  Design:
+    * Zoom limits (no more than 1:1, no less than 1:10)
+
+  To do:
+    ☐ Limit fit all unzoom
+    ☐ Write a custom select rubber band (default one evaluate all nodes in scenes...)
+    ☐ Add a node creation widget (tab)
+
