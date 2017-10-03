@@ -541,7 +541,7 @@ class NodeEdge(QtGui.QGraphicsLineItem):
             # Construct arrow
             matrix = QtGui.QMatrix()
             matrix.rotate(-self.line().angle())
-            matrix.scale(15, 15)
+            matrix.scale(1, 1)
             poly = matrix.map(self._arrow_polygon)
             vec = self.line().unitVector()
             vec = (self.line().length()/2)*QtCore.QPointF(vec.x2() - vec.x1(),
