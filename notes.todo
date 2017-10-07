@@ -9,6 +9,7 @@ Nodes:
 
   To do:
     ☐ Optimize redraw by caching as much as possible any computation
+    ☐ Handle undefined numbers of inputs
     ☐ Create a disabled state
 
 Edges:
@@ -22,6 +23,7 @@ Edges:
     ✔ Create edge interactively @done (17-10-04 09:01)
     ✔ Adjust arrow size (lod bug) and implement dynamic scale @done (17-10-04 09:06)
     ☐ Optimize redraw by caching as much as possible any computation
+    ☐ Optimize redraw by updating line through callbacks
 
 Nodegraph view:
 
