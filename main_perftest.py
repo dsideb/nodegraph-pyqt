@@ -27,17 +27,17 @@ class NodeGraphDialog(QtGui.QMainWindow):
         self.setWindowTitle("Node graph -")
 
         center = self.nodegraph.graph_view.sceneRect().center()
-        for i in range(0, 25):
+        for i in range(0, 30):
             prev_node = None
-            for j in range(0, 15):
+            for j in range(0, 40):
                 node = self.nodegraph.graph_scene.create_node(
                     "random%d" % random.randint(1, 10000),
-                    inputs=["in"])
-                node.setPos(j*500, i*500)
-                if prev_node:
-                    edge = self.nodegraph.graph_scene.create_edge(
-                            prev_node._output, node._inputs[0])
-                prev_node = node
+                    inputs=["in", "add"])
+                node.setPos(j*350, i*350)
+                # if prev_node:
+                #     edge = self.nodegraph.graph_scene.create_edge(
+                #             prev_node._output, node._inputs[0])
+                # prev_node = node
 
         # edge = self.nodegraph.graph_scene.create_edge(cam._output,
         #                                               model._inputs[0])

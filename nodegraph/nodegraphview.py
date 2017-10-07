@@ -68,8 +68,8 @@ class NodeGraphView(QtGui.QGraphicsView):
     def fit_view(self, selected=False, padding=50):
         """Set view transform in order to fit all/selected nodes in scene.
 
-            :param selected: (bool) If enabled, fit only selected nodes.
-            :param padding: (int) Add padding around the target rectangle
+        :param selected: (bool) If enabled, fit only selected nodes.
+        :param padding: (int) Add padding around the target rectangle
 
         """
         # Resolve rectangle we want to zoom to
@@ -90,18 +90,33 @@ class NodeGraphView(QtGui.QGraphicsView):
         new_scale = 1/max(x_ratio, y_ratio)
 
         if new_scale >= 1:
-            # Zoom limit reached. Let's translate to center of rect with reset
-            # scale
+            # Maximum zoom limit reached.
+            # Let's translate to center of rect with reset scale
             self._scale = 1
             self.resetTransform()
             self.centerOn(scene_rect.center())
+        elif new_scale < 0.1:
+            # Minimum zoom limit reached.
+            # Let's translate to center of rect and set zoom to limit
+            if (self._scale) == 0.1:
+                return False
+            self._scale = 1
+            self.resetTransform()
+            self.centerOn(scene_rect.center())
+            self.scale_view(0.1)
         else:
             # Fit to rectangle while keeping aspect ratio
             self._scale = new_scale
             self.fitInView(scene_rect, QtCore.Qt.KeepAspectRatio)
 
+        print(self._scale)
 
     def translate_view(self, offset):
+        """Translate view by the given offset
+
+        :param offset: (QtCore.QPointF)
+
+        """
         self.setInteractive(False)
         self.translate(offset.x(), offset.y())
         self.setInteractive(True)
@@ -112,12 +127,15 @@ class NodeGraphView(QtGui.QGraphicsView):
 
         """
         new_scale = self._scale * scale_factor
-        if limits and (new_scale >= 1.0 or new_scale <= 0.1):
+        if limits and (new_scale >= 1.0 or new_scale < 0.1):
             # Respecting scaling limits
             if new_scale >= 1.0:
                 self._scale = 1
                 self.resetTransform()
-            return False
+                return False
+            elif new_scale < 0.1:
+                scale_factor = new_scale = 0.1
+                self.resetTransform()
 
         # Update global scale
         self._scale = new_scale
@@ -128,6 +146,9 @@ class NodeGraphView(QtGui.QGraphicsView):
 
 
     def keyPressEvent(self, event):
+        """Re-implement keyPressEvent from base class
+
+        """
         if event.key() == QtCore.Qt.Key_Alt:
             self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
             #self.setInteractive(False)
@@ -166,7 +187,7 @@ class NodeGraphView(QtGui.QGraphicsView):
 
 
     def keyReleaseEvent(self, event):
-        """
+        """Re-implement keyReleaseEvent from base class
 
         """
         if event.key() == QtCore.Qt.Key_Alt:
@@ -187,6 +208,9 @@ class NodeGraphView(QtGui.QGraphicsView):
 
 
     def mouseMoveEvent(self, event):
+        """Re-implement mouseMoveEvent from base class
+
+        """
         buttons = event.buttons()
 
         self._last_mouse_pos = event.pos()
@@ -204,6 +228,9 @@ class NodeGraphView(QtGui.QGraphicsView):
 
 
     def wheelEvent(self, event):
+        """Re-implement wheelEvent from base class
+
+        """
         delta = event.delta()
         #p = event.pos()
 
@@ -213,6 +240,9 @@ class NodeGraphView(QtGui.QGraphicsView):
 
 
     def showEvent(self, event):
+        """Re-implent showEvent from base class
+
+        """
         if not self._is_view_initialised:
             self._is_view_initialised = True
             self.fit_view()
@@ -220,6 +250,12 @@ class NodeGraphView(QtGui.QGraphicsView):
 
 
     def _get_selection_bbox(self, selection):
+        """For a given selection of node return the bounding box
+
+        :param selection: (list) list of graphics item
+        :returns: (QtCore.QRectF)
+
+        """
         top_left = QtCore.QPointF(self._width, self._height)
         bottom_right = QtCore.QPointF(- self._width, - self._height)
 

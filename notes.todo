@@ -19,8 +19,8 @@ Edges:
     * A edge is only valid if it doesn't create a loop
 
   To do:
-    ☐ Create edge interactively
-    ☐ Adjust arrow size (lod bug) and implement dynamic scale
+    ✔ Create edge interactively @done (17-10-04 09:01)
+    ✔ Adjust arrow size (lod bug) and implement dynamic scale @done (17-10-04 09:06)
     ☐ Optimize redraw by caching as much as possible any computation
 
 Nodegraph view:
@@ -29,7 +29,7 @@ Nodegraph view:
     * Zoom limits (no more than 1:1, no less than 1:10)
 
   To do:
-    ☐ Limit fit all unzoom
+    ✔ Limit fit all unzoom @done (17-10-05 08:53)
     ☐ Write a custom select rubber band (default one evaluate all nodes in scenes...)
     ☐ Add a node creation widget (tab)
 

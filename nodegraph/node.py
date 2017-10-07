@@ -39,6 +39,7 @@ class Node(QtGui.QGraphicsItem):
         self._slot_radius = 10
         self._label_height = 34
         self._last_visible_pos = self.pos()
+        self._bbox = None # cache container
 
         self.setFlags(QtGui.QGraphicsItem.ItemIsMovable |
                       QtGui.QGraphicsItem.ItemIsSelectable)
@@ -83,16 +84,18 @@ class Node(QtGui.QGraphicsItem):
         for i, _input in enumerate(self._inputs):
             self._inputs[i].setPos(-self._slot_radius, init_y+ slot_height*i)
 
+        # Update bounding box
+        self._bbox = QtCore.QRectF(-self._outline/2,
+                                        -self._outline/2,
+                                        self._width + self._outline,
+                                        self._height + self._outline)
 
     def boundingRect(self):
         """Return a QRect that represents the bounding box of the node.
         Here that sould be the bounding box of the primary shape of the node.
 
         """
-        return QtCore.QRectF(-self._outline/2,
-                             -self._outline/2,
-                             self._width + self._outline,
-                             self._height + self._outline)
+        return self._bbox
 
 
     def paint(self, painter, option, widget=None):
@@ -107,15 +110,15 @@ class Node(QtGui.QGraphicsItem):
         if option.state & QtGui.QStyle.State_Selected:
             fill_brush = self.scene().palette().highlight()
             text_brush = self.scene().palette().highlightedText()
+            # TODO: Find a less expensive way (has an impact on redraw)
+        #     self._output.setSelected(True)
+        #     for _input in self._inputs:
+        #         _input.setSelected(True)
+        # else:
 
-            self._output.setSelected(True)
-            for _input in self._inputs:
-                _input.setSelected(True)
-        else:
-
-            self._output.setSelected(False)
-            for _input in self._inputs:
-                _input.setSelected(False)
+        #     self._output.setSelected(False)
+        #     for _input in self._inputs:
+        #         _input.setSelected(False)
 
         # Let's draw
         painter.save()
@@ -145,6 +148,15 @@ class Node(QtGui.QGraphicsItem):
             painter.setPen(QtGui.QPen(text_brush, 1))
             painter.scale(1, 1)
             painter.drawText(label_rect, QtCore.Qt.AlignCenter, self._name)
+
+
+        # Hide/show slot
+        if lod >= 0.15:
+            for child in self.childItems():
+                child.setVisible(True)
+        else:
+            for child in self.childItems():
+                child.setVisible(False)
 
         painter.restore()
         return
@@ -213,6 +225,7 @@ class NodeSlot(QtGui.QGraphicsItem):
         self._outline = outline
         self._label = label
         self._lod = 1
+        self._bbox = None # cache container
 
         self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
@@ -221,6 +234,7 @@ class NodeSlot(QtGui.QGraphicsItem):
         if self._label:
             self.build_label()
 
+        self._update()
 
     @property
     def family(self):
@@ -230,15 +244,22 @@ class NodeSlot(QtGui.QGraphicsItem):
         return self._family
 
 
+    def _update(self):
+        """Update this node slot
+
+        """
+        self._bbox = QtCore.QRect(- self._outline/2,
+                                  - self._outline/2,
+                                  self._radius*2 + self._outline,
+                                  self._radius*2 + self._outline)
+
+
     def boundingRect(self):
         """Return a QRectF that represents the bounding box.
         Here that sould be the bounding box of the slot.
 
         """
-        return QtCore.QRectF(- self._outline/2,
-                             - self._outline/2,
-                             self._radius*2 + self._outline,
-                             self._radius*2 + self._outline)
+        return self._bbox
 
 
     def paint(self, painter, option, widget=None):
@@ -262,7 +283,7 @@ class NodeSlot(QtGui.QGraphicsItem):
         painter.setPen(QtGui.QPen(outline_brush, self._outline))
 
         # Draw slot
-        if self._lod >= 0.3:
+        if self._lod >= 0.35:
             painter.drawEllipse(QtCore.QRectF(0,
                                               0,
                                               self._radius*2,
@@ -398,13 +419,14 @@ class NodeEdge(QtGui.QGraphicsLineItem):
     def __init__(self, source_slot, target_slot, scene, outline=2, arrow=None):
         """Creates an instance of this class
 
-            :param source: (<NodeSlot>)
-                Source slot (should be a output one)
-            :param target: (<NodeSlot>)
-                Target slot (should be an input one)
-            :param scene: (<NodeGraphScene>)
-                GraphicsScene that holds the source and target nodes
-            :returns: (<NodeEdge>)
+        :param source: Source slot (should be a output one)
+        :type source: :class:`nodegraph.node.NodeSlot`
+        :param target: Target slot (should be an input one)
+        :type target: :cLass:`nodegraph.node.NodeSlot`
+        :param scene: GraphicsScene that holds the source and target nodes
+        :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+        :returns: An instance of this class
+        :rtype: :class:`nodegraph.node.NodeEdge`
 
         """
         QtGui.QGraphicsLineItem.__init__(self, parent=None, scene=scene)
@@ -413,7 +435,8 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         self._target_slot = target_slot
         self._outline = outline
         self._arrow = arrow
-        self._arrow_polygon = None # Cache container for polygon
+        # Cache container for polygon
+        self._arrow_polygon = self._get_arrow_polygon()
         self._lod = 1
 
         # Set tooltip
@@ -443,13 +466,13 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         return QtCore.QLineF(start, end)
 
 
-    def _get_arrow_polygon(self, unit):
-        """
+    def _get_arrow_polygon(self):
+        """Return arrow polygon
 
         """
-        height = unit*4
-        width = unit*3
-        thick = unit*2
+        height = 4
+        width = height*3/4
+        thick = height/2
         if self._arrow & self.ARROW_STANDARD:
             return QtGui.QPolygonF([QtCore.QPointF(height, 0),
                                     QtCore.QPointF(- height, - width),
@@ -466,8 +489,7 @@ class NodeEdge(QtGui.QGraphicsLineItem):
 
     def shape(self):
         """Re-implement shape method
-
-        Return a QPainterPath that represents the bounding shape.
+        Return a QPainterPath that represents the bounding shape
 
         """
         width = 1/self._lod if self._outline*self._lod < 1 else self._outline
@@ -525,23 +547,12 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         painter.setPen(self.pen())
         painter.drawLine(self.line())
 
-        # Draw end circles
-        # painter.setBrush(brush)
-        # painter.drawEllipse(self.line().p1(), self._outline, self._outline)
-        # painter.drawEllipse(self.line().p2(), self._outline, self._outline)
-
-        # Draw arrow
-        if self._arrow and self._lod >= 0.1:
-            # Cache arrow polygon
-            if not self._arrow_polygon:
-                self._arrow_polygon = self._get_arrow_polygon(width)
-
-            # TO DO: Scale arrow to compensate for zoom
-
-            # Construct arrow
+        # Draw arrow if needed
+        if self._arrow and self._lod > 0.15:
+           # Construct arrow
             matrix = QtGui.QMatrix()
             matrix.rotate(-self.line().angle())
-            matrix.scale(1, 1)
+            matrix.scale(width, width)
             poly = matrix.map(self._arrow_polygon)
             vec = self.line().unitVector()
             vec = (self.line().length()/2)*QtCore.QPointF(vec.x2() - vec.x1(),
@@ -590,7 +601,8 @@ class NodeInteractiveEdge(NodeEdge):
         self._mouse_pos = mouse_pos
         self._outline = outline
         self._arrow = arrow
-        self._arrow_polygon = None # Cache container for polygon
+        # Cache container for polygon
+        self._arrow_polygon = self._get_arrow_polygon()
         self._lod = 1
 
         self.setZValue(-10)
