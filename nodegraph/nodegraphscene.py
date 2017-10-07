@@ -8,7 +8,7 @@
 Node graph scene manager based on QGraphicsScene
 
 """
-from PySide import QtCore, QtGui
+from . import QtCore, QtGui
 
 from .node import Node, NodeSlot, NodeEdge, NodeInteractiveEdge
 

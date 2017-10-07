@@ -4,7 +4,10 @@
 import sys
 
 #import networkx
-from PySide import QtGui
+try:
+    from PySide import QtGui
+except:
+    from PyQt4 import QtGui
 
 from nodegraph.nodegraphscene import NodeGraphScene
 from nodegraph.nodegraphview import NodeGraphView

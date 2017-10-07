@@ -10,7 +10,7 @@ Node graph scene manager based on QGraphicsScene
 """
 import random
 
-from PySide import QtCore, QtGui, QtOpenGL
+from . import QtCore, QtGui, QtOpenGL
 
 from .node import Node
 from .constant import SCENE_WIDTH, SCENE_HEIGHT

@@ -15,7 +15,7 @@ Base node definition including
 
 """
 
-from PySide import QtCore, QtGui
+from . import QtCore, QtGui
 
 from constant import DEBUG
 
@@ -248,10 +248,10 @@ class NodeSlot(QtGui.QGraphicsItem):
         """Update this node slot
 
         """
-        self._bbox = QtCore.QRect(- self._outline/2,
-                                  - self._outline/2,
-                                  self._radius*2 + self._outline,
-                                  self._radius*2 + self._outline)
+        self._bbox = QtCore.QRectF(- self._outline/2,
+                                   - self._outline/2,
+                                   self._radius*2 + self._outline,
+                                   self._radius*2 + self._outline)
 
 
     def boundingRect(self):
