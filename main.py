@@ -30,16 +30,16 @@ class NodeGraphDialog(QtGui.QMainWindow):
 
         center = self.nodegraph.graph_view.sceneRect().center()
         cam = self.nodegraph.graph_scene.create_node("camera")
-        cam.setPos(-200, 200)
+        cam.setPos(-200, -150)
         model = self.nodegraph.graph_scene.create_node(
                 "combine",
                 inputs=["mesh1", "mesh2", "camera"])
-        model.setPos(150, 300)
+        model.setPos(150, 0)
         edge = self.nodegraph.graph_scene.create_edge(cam._output,
                                                       model._inputs[0])
 
         test = self.nodegraph.graph_scene.create_node("test")
-        test.setPos(-400, -300)
+        test.setPos(-400, 150)
         egde = self.nodegraph.graph_scene.create_edge(test._output,
                                                       model._inputs[1])
 

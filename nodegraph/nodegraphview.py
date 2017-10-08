@@ -43,19 +43,19 @@ class NodeGraphView(QtGui.QGraphicsView):
                               self._width, self._height))
 
         # Enable OpenGL
-        GL_format = QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers)
-        viewport = QtOpenGL.QGLWidget(GL_format)
-        self.setViewport(viewport)
+        # GL_format = QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers)
+        # viewport = QtOpenGL.QGLWidget(GL_format)
+        # self.setViewport(viewport)
 
         # Settings
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
         self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
+        #self.setRenderHint(QtGui.QPainter.Antialiasing)
         #self.setRenderHint(QtGui.QPainter.TextAntialiasing)
-        self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
-        #self.setViewportUpdateMode(QtGui.QGraphicsView.FullViewportUpdate)
+        #self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
+        self.setViewportUpdateMode(QtGui.QGraphicsView.SmartViewportUpdate)
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.setRubberBandSelectionMode(QtCore.Qt.ContainsItemBoundingRect)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding,

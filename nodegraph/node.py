@@ -14,7 +14,6 @@ Base node definition including
     * NodeInteractiveEdge
 
 """
-
 from . import QtCore, QtGui
 
 from constant import DEBUG
@@ -121,7 +120,7 @@ class Node(QtGui.QGraphicsItem):
         #         _input.setSelected(False)
 
         # Let's draw
-        painter.save()
+        #painter.save()
 
         # Set brush and pen, then start drawing
         painter.setBrush(self.scene().palette().buttonText())
@@ -158,7 +157,7 @@ class Node(QtGui.QGraphicsItem):
             for child in self.childItems():
                 child.setVisible(False)
 
-        painter.restore()
+        #painter.restore()
         return
 
 
@@ -226,6 +225,8 @@ class NodeSlot(QtGui.QGraphicsItem):
         self._label = label
         self._lod = 1
         self._bbox = None # cache container
+        self._round_slot = None
+        self._rect_slot = None
 
         self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
@@ -245,13 +246,18 @@ class NodeSlot(QtGui.QGraphicsItem):
 
 
     def _update(self):
-        """Update this node slot
+        """Update node slot
 
         """
         self._bbox = QtCore.QRectF(- self._outline/2,
                                    - self._outline/2,
                                    self._radius*2 + self._outline,
                                    self._radius*2 + self._outline)
+
+        self._round_slot = QtCore.QRectF(0, 0, self._radius*2, self._radius*2)
+        self._rect_slot = QtCore.QRectF(0, 0,
+                                        self._radius*2 - self._radius/3,
+                                        self._radius*2 - self._radius/3)
 
 
     def boundingRect(self):
@@ -278,21 +284,15 @@ class NodeSlot(QtGui.QGraphicsItem):
             fill_color = fill_brush.color().darker(250)
             fill_brush.setColor(fill_color)
 
-        painter.save()
+        #painter.save()
         painter.setBrush(fill_brush)
         painter.setPen(QtGui.QPen(outline_brush, self._outline))
 
         # Draw slot
         if self._lod >= 0.35:
-            painter.drawEllipse(QtCore.QRectF(0,
-                                              0,
-                                              self._radius*2,
-                                              self._radius*2))
+            painter.drawEllipse(self._round_slot)
         else:
-            painter.drawRect(QtCore.QRectF(0,
-                                           0,
-                                           self._radius*2 - self._radius/3,
-                                           self._radius*2 - self._radius/3))
+            painter.drawRect(self._rect_slot)
 
         # Hide/show label
         if self._label:
@@ -309,7 +309,7 @@ class NodeSlot(QtGui.QGraphicsItem):
             painter.setPen(QtGui.QColor(0, 0, 255))
             painter.drawRect(self.boundingRect())
 
-        painter.restore()
+        #painter.restore()
         return
 
 
@@ -388,7 +388,7 @@ class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
             alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight
 
         # Let's draw
-        painter.save()
+        #painter.save()
 
         # Draw label
         painter.setFont(self.font())
@@ -401,7 +401,7 @@ class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
             painter.setPen(QtGui.QColor(255, 0, 255))
             painter.drawRect(self.boundingRect())
 
-        painter.restore()
+        #painter.restore()
         return
 
 
@@ -436,18 +436,18 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         self._outline = outline
         self._arrow = arrow
         # Cache container for polygon
-        self._arrow_polygon = self._get_arrow_polygon()
         self._lod = 1
+        self._arrow_polygon = self._get_arrow_polygon()
 
         # Set tooltip
         tooltip = ("%s(%s)  >> %s(%s)" %
-                   (source_slot.parentItem()._name, source_slot._name,
-                    target_slot.parentItem()._name, target_slot._name))
+                         (source_slot.parentItem()._name, source_slot._name,
+                          target_slot.parentItem()._name, target_slot._name))
         self.setToolTip(tooltip)
 
-        self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
+        #self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
 
-        self.setAcceptHoverEvents(True)
+        #self.setAcceptHoverEvents(True)
         self.setZValue(-10)
 
         # Update line
@@ -541,7 +541,7 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         self.setPen(QtGui.QPen(brush, width))
 
         # Let's draw!
-        painter.save()
+        #painter.save()
 
         # Draw line
         painter.setPen(self.pen())
@@ -573,7 +573,7 @@ class NodeEdge(QtGui.QGraphicsLineItem):
             painter.setPen(QtGui.QColor(0, 255, 0))
             painter.drawRect(self.boundingRect())
 
-        painter.restore()
+        #painter.restore()
         return
 
 
@@ -601,9 +601,9 @@ class NodeInteractiveEdge(NodeEdge):
         self._mouse_pos = mouse_pos
         self._outline = outline
         self._arrow = arrow
+        self._lod = 1
         # Cache container for polygon
         self._arrow_polygon = self._get_arrow_polygon()
-        self._lod = 1
 
         self.setZValue(-10)
 

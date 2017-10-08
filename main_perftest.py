@@ -42,14 +42,6 @@ class NodeGraphDialog(QtGui.QMainWindow):
                 #             prev_node._output, node._inputs[0])
                 # prev_node = node
 
-        # edge = self.nodegraph.graph_scene.create_edge(cam._output,
-        #                                               model._inputs[0])
-
-        # test = self.nodegraph.graph_scene.create_node("test")
-        # test.setPos(-400, -300)
-        # egde = self.nodegraph.graph_scene.create_edge(test._output,
-        #                                               model._inputs[1])
-
 
 class NodeGraphWidget(QtGui.QWidget):
 
