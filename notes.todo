@@ -41,3 +41,7 @@ redrawn.
 Using regular viewport allows for partial redraw but then edges are not redrawn
 well (most likely because of shape/bbox too tight and/or way of being updated)
 Also, knob are relatively slow to select. Need to investigate.
+
+Knob are slow to select because of NodeSlotLabel that has to be set visible on
+every redraw....
+Same for Node Slot..

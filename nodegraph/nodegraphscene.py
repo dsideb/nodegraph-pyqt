@@ -155,7 +155,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
 
     def delete_selected(self):
-        """
+        """Delete selected nodes and edges
 
         """
         nodes = []

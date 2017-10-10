@@ -17,7 +17,7 @@ Base node definition including
 from . import QtCore, QtGui
 
 from constant import DEBUG
-
+from polygons import ARROW_STANDARD, ARROW_SLIM
 
 class Node(QtGui.QGraphicsItem):
 
@@ -114,7 +114,6 @@ class Node(QtGui.QGraphicsItem):
         #     for _input in self._inputs:
         #         _input.setSelected(True)
         # else:
-
         #     self._output.setSelected(False)
         #     for _input in self._inputs:
         #         _input.setSelected(False)
@@ -222,7 +221,7 @@ class NodeSlot(QtGui.QGraphicsItem):
         self._family = family or self.INPUT
         self._radius = radius
         self._outline = outline
-        self._label = label
+        self._label = None
         self._lod = 1
         self._bbox = None # cache container
         self._round_slot = None
@@ -350,6 +349,9 @@ class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
     LABEL_RIGHT = 2
 
     def __init__(self, text, width, height, mode, parent=None):
+        """Instance this class
+
+        """
         QtGui.QGraphicsSimpleTextItem.__init__(self, text, parent=parent)
 
         self._text = text
@@ -387,9 +389,6 @@ class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
         elif self._mode & self.LABEL_LEFT:
             alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight
 
-        # Let's draw
-        #painter.save()
-
         # Draw label
         painter.setFont(self.font())
         painter.setPen(self.pen())
@@ -401,7 +400,6 @@ class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
             painter.setPen(QtGui.QColor(255, 0, 255))
             painter.drawRect(self.boundingRect())
 
-        #painter.restore()
         return
 
 
@@ -435,9 +433,8 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         self._target_slot = target_slot
         self._outline = outline
         self._arrow = arrow
-        # Cache container for polygon
         self._lod = 1
-        self._arrow_polygon = self._get_arrow_polygon()
+        self._shape = None
 
         # Set tooltip
         tooltip = ("%s(%s)  >> %s(%s)" %
@@ -450,8 +447,8 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         #self.setAcceptHoverEvents(True)
         self.setZValue(-10)
 
-        # Update line
-        self.setLine(self._get_line())
+        # Update
+        self.update()
 
 
     def _get_line(self):
@@ -466,25 +463,28 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         return QtCore.QLineF(start, end)
 
 
-    def _get_arrow_polygon(self):
-        """Return arrow polygon
+    def update(self):
+        """Update internal properties
 
         """
-        height = 4
-        width = height*3/4
-        thick = height/2
-        if self._arrow & self.ARROW_STANDARD:
-            return QtGui.QPolygonF([QtCore.QPointF(height, 0),
-                                    QtCore.QPointF(- height, - width),
-                                    QtCore.QPointF(- height, width),
-                                    QtCore.QPointF(height, 0)])
-        elif self._arrow & self.ARROW_SLIM:
-            return QtGui.QPolygonF([QtCore.QPointF(thick/2, 0),
-                                    QtCore.QPointF(- thick, - width),
-                                    QtCore.QPointF(- thick*2, - width),
-                                    QtCore.QPointF(- thick/2, 0),
-                                    QtCore.QPointF(- thick*2, width),
-                                    QtCore.QPointF(- thick, width)])
+        # Update line
+        self.setLine(self._get_line())
+
+        # Update path
+        width = 1/self._lod if self._outline*self._lod < 1 else self._outline
+        norm = self.line().unitVector().normalVector()
+        norm = width*3*QtCore.QPointF(norm.x2()-norm.x1(),
+                                          norm.y2()-norm.y1())
+
+        self._shape = QtGui.QPainterPath()
+        poly = QtGui.QPolygonF([self.line().p1() - norm,
+                                self.line().p1() + norm,
+                                self.line().p2() + norm,
+                                self.line().p2() - norm])
+        self._shape.addPolygon(poly)
+        self._shape.closeSubpath()
+
+        QtGui.QGraphicsLineItem.update(self)
 
 
     def shape(self):
@@ -492,31 +492,18 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         Return a QPainterPath that represents the bounding shape
 
         """
-        width = 1/self._lod if self._outline*self._lod < 1 else self._outline
-        norm = self.line().unitVector().normalVector()
-        norm = width*3*QtCore.QPointF(norm.x2()-norm.x1(),
-                                          norm.y2()-norm.y1())
-
-        path = QtGui.QPainterPath()
-        poly = QtGui.QPolygonF([self.line().p1() - norm,
-                                self.line().p1() + norm,
-                                self.line().p2() + norm,
-                                self.line().p2() - norm])
-        path.addPolygon(poly)
-        path.closeSubpath()
-
-        return path
+        return self._shape
 
 
     def boundingRect(self):
         """Re-implement bounding box method
 
         """
-        # Update line
-        self.setLine(self._get_line())
+        # Update node
+        #self.update()
 
         # Infer bounding box from shape
-        return self.shape().controlPointRect()
+        return self._shape.controlPointRect()
 
 
     def paint(self, painter, option, widget=None):
@@ -540,9 +527,6 @@ class NodeEdge(QtGui.QGraphicsLineItem):
         width = 1/self._lod if self._outline*self._lod < 1 else self._outline
         self.setPen(QtGui.QPen(brush, width))
 
-        # Let's draw!
-        #painter.save()
-
         # Draw line
         painter.setPen(self.pen())
         painter.drawLine(self.line())
@@ -553,7 +537,12 @@ class NodeEdge(QtGui.QGraphicsLineItem):
             matrix = QtGui.QMatrix()
             matrix.rotate(-self.line().angle())
             matrix.scale(width, width)
-            poly = matrix.map(self._arrow_polygon)
+
+            if self._arrow & self.ARROW_STANDARD:
+                poly = matrix.map(ARROW_STANDARD)
+            elif self._arrow & self.ARROW_SLIM:
+                poly = matrix.map(ARROW_SLIM)
+
             vec = self.line().unitVector()
             vec = (self.line().length()/2)*QtCore.QPointF(vec.x2() - vec.x1(),
                                                           vec.y2() - vec.y1())
@@ -573,7 +562,6 @@ class NodeEdge(QtGui.QGraphicsLineItem):
             painter.setPen(QtGui.QColor(0, 255, 0))
             painter.drawRect(self.boundingRect())
 
-        #painter.restore()
         return
 
 
@@ -602,13 +590,12 @@ class NodeInteractiveEdge(NodeEdge):
         self._outline = outline
         self._arrow = arrow
         self._lod = 1
-        # Cache container for polygon
-        self._arrow_polygon = self._get_arrow_polygon()
+        self._shape = None
 
         self.setZValue(-10)
 
         # Update line
-        self.setLine(self._get_line())
+        self.update()
 
 
     def _get_line(self):
@@ -626,4 +613,4 @@ class NodeInteractiveEdge(NodeEdge):
         self._mouse_pos = mouse_pos
         if source_slot:
             self._source_slot = source_slot
-        self.setLine(self._get_line())
+        self.update()

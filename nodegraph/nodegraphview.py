@@ -52,10 +52,10 @@ class NodeGraphView(QtGui.QGraphicsView):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
         self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
-        #self.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.setRenderHint(QtGui.QPainter.Antialiasing)
         #self.setRenderHint(QtGui.QPainter.TextAntialiasing)
         #self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.SmartViewportUpdate)
+        self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.setRubberBandSelectionMode(QtCore.Qt.ContainsItemBoundingRect)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding,
@@ -98,18 +98,16 @@ class NodeGraphView(QtGui.QGraphicsView):
         elif new_scale < 0.1:
             # Minimum zoom limit reached.
             # Let's translate to center of rect and set zoom to limit
-            if (self._scale) == 0.1:
-                return False
-            self._scale = 1
-            self.resetTransform()
+            if (self._scale) != 0.1:
+                self._scale = 1
+                self.resetTransform()
+                self.scale_view(0.1)
             self.centerOn(scene_rect.center())
-            self.scale_view(0.1)
         else:
             # Fit to rectangle while keeping aspect ratio
             self._scale = new_scale
             self.fitInView(scene_rect, QtCore.Qt.KeepAspectRatio)
 
-        print(self._scale)
 
     def translate_view(self, offset):
         """Translate view by the given offset
@@ -196,25 +194,25 @@ class NodeGraphView(QtGui.QGraphicsView):
         #self.setInteractive(True)
 
 
-    # def mousePressEvent(self, event):
-    #     buttons = event.buttons()
-    #     modifiers = event.modifiers()
-
-    #     if buttons == QtCore.Qt.LeftButton:
-    #         #print("Button pressed!")
-    #         pass
-
-    #     QtGui.QGraphicsView.mousePressEvent(self, event)
-
-
-    def mouseMoveEvent(self, event):
-        """Re-implement mouseMoveEvent from base class
-
-        """
+    def mousePressEvent(self, event):
         buttons = event.buttons()
+        modifiers = event.modifiers()
 
-        self._last_mouse_pos = event.pos()
-        QtGui.QGraphicsView.mouseMoveEvent(self, event)
+        if buttons == QtCore.Qt.LeftButton:
+            #print("Button pressed!")
+            pass
+
+        QtGui.QGraphicsView.mousePressEvent(self, event)
+
+
+    # def mouseMoveEvent(self, event):
+    #     """Re-implement mouseMoveEvent from base class
+
+    #     """
+    #     buttons = event.buttons()
+
+    #     self._last_mouse_pos = event.pos()
+    #     QtGui.QGraphicsView.mouseMoveEvent(self, event)
 
 
     # def mouseReleaseEvent(self, event):
