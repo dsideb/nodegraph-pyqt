@@ -10,7 +10,8 @@ Node graph scene manager based on QGraphicsScene
 """
 from . import QtCore, QtGui
 
-from .node import Node, NodeSlot, NodeEdge, NodeInteractiveEdge
+from .node import Node, NodeSlot
+from .edge import Edge, InteractiveEdge
 
 
 class NodeGraphScene(QtGui.QGraphicsScene):
@@ -72,7 +73,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         """Create a new edge
 
         """
-        edge = NodeEdge(source, target, self, arrow=NodeEdge.ARROW_STANDARD)
+        edge = Edge(source, target, self, arrow=Edge.ARROW_STANDARD)
         self._edges.append(edge)
         return edge
 
@@ -84,10 +85,10 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         self._is_interactive_edge = True
         if not self._interactive_edge:
             # Create interactive edge
-            self._interactive_edge = NodeInteractiveEdge(source_slot,
+            self._interactive_edge = InteractiveEdge(source_slot,
                     mouse_pos,
                     scene=self,
-                    arrow=NodeEdge.ARROW_STANDARD)
+                    arrow=Edge.ARROW_STANDARD)
         else:
             # Re-use existing interactive edge
             self._interactive_edge.refresh(mouse_pos, source_slot)
@@ -163,7 +164,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         for i in self.selectedItems():
             if isinstance(i, Node):
                 nodes.append(i)
-            if isinstance(i, NodeEdge):
+            if isinstance(i, Edge):
                 edges.append(i)
 
         print("Node(s) to delete: %s" % [n._name for n in nodes])

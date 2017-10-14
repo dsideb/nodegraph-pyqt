@@ -35,13 +35,10 @@ Nodegraph view:
     ☐ Write a custom select rubber band (default one evaluate all nodes in scenes...)
     ☐ Add a node creation widget (tab)
 
-Performances issues is due to the fact the OpenGL doesn't accept partial redraw,
-hence redraw has to happen on the whole viewport regardless of what need to be
-redrawn.
-Using regular viewport allows for partial redraw but then edges are not redrawn
-well (most likely because of shape/bbox too tight and/or way of being updated)
-Also, knob are relatively slow to select. Need to investigate.
+Performances issues:
 
-Knob are slow to select because of NodeSlotLabel that has to be set visible on
-every redraw....
-Same for Node Slot..
+  * OpenGL viewport don't accept partial redraw, hence redraw has to happen on the whole viewport regardless of what need to be redrawn.
+  * Using regular viewport allows for partial redraw but then edges are not redrawn well (most likely because of shape/bbox too tight and/or way of being updated)
+  * Hierarchy of graphicsItem contained by a Node (NodeSlot, NodeSlotLabel) is forcing QT to multiply draw calls (3 instead of 1). KILLING rubber band selection refresh.
+  * Knobs have to be set visible (or not) on every redraw.
+

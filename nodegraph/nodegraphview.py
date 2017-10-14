@@ -195,6 +195,12 @@ class NodeGraphView(QtGui.QGraphicsView):
 
 
     def mousePressEvent(self, event):
+
+        # Consumme event if we are currently creating an new edge
+        if self.scene()._is_interactive_edge:
+            event.accept()
+            return
+
         buttons = event.buttons()
         modifiers = event.modifiers()
 

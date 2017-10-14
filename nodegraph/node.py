@@ -10,14 +10,11 @@ Base node definition including
     * Node
     * NodeSlot
     * NodeSlotLabel
-    * NodeEdge
-    * NodeInteractiveEdge
 
 """
 from . import QtCore, QtGui
 
 from constant import DEBUG
-from polygons import ARROW_STANDARD, ARROW_SLIM
 
 class Node(QtGui.QGraphicsItem):
 
@@ -37,12 +34,12 @@ class Node(QtGui.QGraphicsItem):
         self._outline = 6
         self._slot_radius = 10
         self._label_height = 34
-        self._last_visible_pos = self.pos()
         self._bbox = None # cache container
+        self._round_slot = None
+        self._rect_slot = None
 
         self.setFlags(QtGui.QGraphicsItem.ItemIsMovable |
                       QtGui.QGraphicsItem.ItemIsSelectable)
-                     # QtGui.QGraphicsItem.ItemSendsGeometryChanges)
 
         self.setAcceptHoverEvents(False)
 
@@ -68,7 +65,7 @@ class Node(QtGui.QGraphicsItem):
 
 
     def _update(self):
-        """ Update slots position
+        """ Update slots internal properties
 
         """
         slot_height = self._slot_radius*2 + self._outline
@@ -76,18 +73,24 @@ class Node(QtGui.QGraphicsItem):
 
         # Update output
         init_y = base_y - slot_height/2
-        self._output.setPos(self._width - self._slot_radius, init_y)
+        self._output_pos = QtCore.QPointF(self._width - self._slot_radius,
+                                          init_y)
 
-        # Update inputs
-        init_y = base_y - slot_height*len(self._inputs)/2
-        for i, _input in enumerate(self._inputs):
-            self._inputs[i].setPos(-self._slot_radius, init_y+ slot_height*i)
+        # # Update inputs
+        # init_y = base_y - slot_height*len(self._inputs)/2
+        # for i, _input in enumerate(self._inputs):
+        #     self._inputs[i].setPos(-self._slot_radius, init_y+ slot_height*i)
+
+        self._draw_slot = QtCore.QRectF(0, 0, self._slot_radius*2,
+                                        self._slot_radius*2)
 
         # Update bounding box
-        self._bbox = QtCore.QRectF(-self._outline/2,
-                                        -self._outline/2,
-                                        self._width + self._outline,
-                                        self._height + self._outline)
+        self._bbox = QtCore.QRectF(
+                -self._outline/2 -self._slot_radius,
+                -self._outline/2,
+                self._width + self._outline + self._slot_radius*2,
+                self._height + self._outline)
+
 
     def boundingRect(self):
         """Return a QRect that represents the bounding box of the node.
@@ -109,17 +112,6 @@ class Node(QtGui.QGraphicsItem):
         if option.state & QtGui.QStyle.State_Selected:
             fill_brush = self.scene().palette().highlight()
             text_brush = self.scene().palette().highlightedText()
-            # TODO: Find a less expensive way (has an impact on redraw)
-        #     self._output.setSelected(True)
-        #     for _input in self._inputs:
-        #         _input.setSelected(True)
-        # else:
-        #     self._output.setSelected(False)
-        #     for _input in self._inputs:
-        #         _input.setSelected(False)
-
-        # Let's draw
-        #painter.save()
 
         # Set brush and pen, then start drawing
         painter.setBrush(self.scene().palette().buttonText())
@@ -148,60 +140,98 @@ class Node(QtGui.QGraphicsItem):
             painter.drawText(label_rect, QtCore.Qt.AlignCenter, self._name)
 
 
-        # Hide/show slot
+        # Draw slots
         if lod >= 0.15:
-            for child in self.childItems():
-                child.setVisible(True)
-        else:
-            for child in self.childItems():
-                child.setVisible(False)
+            self.setAcceptHoverEvents(True)
+            painter.setBrush(self.scene().palette().text())
+            painter.setPen(QtGui.QPen(fill_brush, self._outline))
 
-        #painter.restore()
+            if lod >= 0.35:
+                # Draw output (Ellipse)
+                rect = QtCore.QRectF(self._draw_slot)
+                rect.moveTo(self._output_pos)
+                painter.drawEllipse(rect)
+
+                # Draw input (Ellipse)
+                # for aninput in self._inputs:
+                #     rect = QtCore.QRect(self._draw_slot)
+                #     rect.moveTo(self._inputs)
+            else:
+                # Draw output (Rectangle)
+                rect = QtCore.QRectF(self._draw_slot)
+                rect.moveTo(self._output_pos)
+                painter.drawRect(rect)
+        else:
+            self.setAcceptHoverEvents(False)
+
+        # Draw slot labels
+        if lod >= 0.6:
+            font = QtGui.QFont("Arial", 10)
+            font.setStyleStrategy(QtGui.QFont.ForceOutline)
+            painter.setFont(font)
+            painter.setPen(QtGui.QPen(self.scene().palette().text(), 1))
+
+            width = self._width/2 - self._slot_radius - self._outline
+            height = self._slot_radius*2
+
+            # Output
+            alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight
+            rect = QtCore.QRectF(self._width/2, self._output_pos.y(),
+                                  width, height)
+            painter.drawText(rect, alignment, "out")
+
+            # Input
+            #alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft
+            #rect = QtCore.QRectF(height + self._outline, 0, width, height)
+            #painter.drawText(rect, alignment, "in")
+
+        # Draw debug
+        if DEBUG:
+            painter.setBrush(QtGui.QBrush())
+            painter.setPen(QtGui.QColor(255, 0, 0))
+            painter.drawRect(self.boundingRect())
+
         return
 
 
-    def mouseMoveEvent(self, event):
+    def hoverMoveEvent(self, event):
         """
 
         """
-        buttonState = event.buttons()
+        rect = QtCore.QRectF(self._draw_slot)
+        rect.moveTo(self._output_pos)
 
-        # # # Drag view while moving nodes
-        # # if event.modifiers() & QtCore.Qt.ControlModifier:
-        # #     print("toto")
-
-        # if buttonState == QtCore.Qt.LeftButton:
-        #     if not visible_rect.contains(mouse_pos.x(), mouse_pos.y()):
-        #         # Tag this node for full redraw
-        #         pass
+        if rect.contains(event.pos()):
+            print("Hover slot")
 
         # Call normal behavior
-        QtGui.QGraphicsItem.mouseMoveEvent(self, event)
+        QtGui.QGraphicsItem.hoverMoveEvent(self, event)
 
         return
 
 
-    def itemChange(self, change, value):
-        """Re-implement ancestor method that allows for changes notifications
+    def mousePressEvent(self, event):
+        """
 
         """
-        # For a selected item, if its position is change, check it stays in the
-        # visible area of the view
-        if (self.isSelected() and self.scene()
-            and change == QtGui.QGraphicsItem.ItemPositionChange):
-            view = self.scene().views()[0]
+        buttons = event.buttons()
+        modifiers = event.modifiers()
 
-            visible_rect = view.mapToScene(view.rect()).boundingRect()
-            if (not visible_rect.contains(value.x()+self._width/2,
-                                          value.y()+self._height/2)):
-                return self._last_visible_pos
-            else:
-                self._last_visible_pos = self.pos()
+        if buttons == QtCore.Qt.LeftButton:
+            rect = QtCore.QRectF(self._draw_slot)
+            rect.moveTo(self._output_pos)
 
-        return value
+            if rect.contains(event.pos()):
+                print("Click on slot")
+                mouse_pos = self.mapToScene(event.pos())
+                self.scene().start_interactive_edge(self._output, mouse_pos)
+                event.accept()
 
+                return None
 
-class NodeSlot(QtGui.QGraphicsItem):
+        QtGui.QGraphicsItem.mousePressEvent(self, event)
+
+class NodeSlot(object):
 
     """
     Base class for edge slot
@@ -216,7 +246,7 @@ class NodeSlot(QtGui.QGraphicsItem):
         """Instance this class
 
         """
-        QtGui.QGraphicsItem.__init__(self, parent=parent, scene=scene)
+        #QtGui.QGraphicsItem.__init__(self, parent=parent, scene=scene)
         self._name = name
         self._family = family or self.INPUT
         self._radius = radius
@@ -227,12 +257,12 @@ class NodeSlot(QtGui.QGraphicsItem):
         self._round_slot = None
         self._rect_slot = None
 
-        self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
-        self.setAcceptHoverEvents(True)
+        #self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
+        #self.setAcceptHoverEvents(True)
 
         # Create text label if required
-        if self._label:
-            self.build_label()
+        #if self._label:
+        #    self.build_label()
 
         self._update()
 
@@ -253,10 +283,7 @@ class NodeSlot(QtGui.QGraphicsItem):
                                    self._radius*2 + self._outline,
                                    self._radius*2 + self._outline)
 
-        self._round_slot = QtCore.QRectF(0, 0, self._radius*2, self._radius*2)
-        self._rect_slot = QtCore.QRectF(0, 0,
-                                        self._radius*2 - self._radius/3,
-                                        self._radius*2 - self._radius/3)
+        self._draw_rect = QtCore.QRectF(0, 0, self._radius*2, self._radius*2)
 
 
     def boundingRect(self):
@@ -283,15 +310,14 @@ class NodeSlot(QtGui.QGraphicsItem):
             fill_color = fill_brush.color().darker(250)
             fill_brush.setColor(fill_color)
 
-        #painter.save()
         painter.setBrush(fill_brush)
         painter.setPen(QtGui.QPen(outline_brush, self._outline))
 
         # Draw slot
         if self._lod >= 0.35:
-            painter.drawEllipse(self._round_slot)
+            painter.drawEllipse(self._draw_rect)
         else:
-            painter.drawRect(self._rect_slot)
+            painter.drawRect(self._draw_rect)
 
         # Hide/show label
         if self._label:
@@ -308,34 +334,33 @@ class NodeSlot(QtGui.QGraphicsItem):
             painter.setPen(QtGui.QColor(0, 0, 255))
             painter.drawRect(self.boundingRect())
 
-        #painter.restore()
         return
 
 
-    def mousePressEvent(self, event):
-        """Re-implement mouse press event
+    # def mousePressEvent(self, event):
+    #     """Re-implement mouse press event
 
-        """
-        buttons = event.buttons()
-        modifiers = event.modifiers()
+    #     """
+    #     buttons = event.buttons()
+    #     modifiers = event.modifiers()
 
-        if buttons == QtCore.Qt.LeftButton:
-            # msg = ("%s (%s) slot %s pressed!" %
-            #        (self.parentItem()._name, self._family, self._name))
-            # print(msg)
-            mouse_pos = self.mapToScene(event.pos())
-            self.scene().start_interactive_edge(self, mouse_pos)
+    #     if buttons == QtCore.Qt.LeftButton:
+    #         # msg = ("%s (%s) slot %s pressed!" %
+    #         #        (self.parentItem()._name, self._family, self._name))
+    #         # print(msg)
+    #         mouse_pos = self.mapToScene(event.pos())
+    #         self.scene().start_interactive_edge(self, mouse_pos)
 
-        QtGui.QGraphicsItem.mousePressEvent(self, event)
+    #     QtGui.QGraphicsItem.mousePressEvent(self, event)
 
 
-    def build_label(self):
-        """
+    # def build_label(self):
+    #     """
 
-        """
-        width = self.parentItem()._width/2 - self._radius - self._outline
-        height = self._radius*2
-        return NodeSlotLabel(self._name, width, height, self._label, self)
+    #     """
+    #     width = self.parentItem()._width/2 - self._radius - self._outline
+    #     height = self._radius*2
+    #     return NodeSlotLabel(self._name, width, height, self._label, self)
 
 
 class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
@@ -401,216 +426,3 @@ class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
             painter.drawRect(self.boundingRect())
 
         return
-
-
-class NodeEdge(QtGui.QGraphicsLineItem):
-
-    """
-    Node Edge base class that displays a directed line between two slots
-    of a source and target node
-
-    """
-
-    ARROW_STANDARD = 1
-    ARROW_SLIM = 2
-
-    def __init__(self, source_slot, target_slot, scene, outline=2, arrow=None):
-        """Creates an instance of this class
-
-        :param source: Source slot (should be a output one)
-        :type source: :class:`nodegraph.node.NodeSlot`
-        :param target: Target slot (should be an input one)
-        :type target: :cLass:`nodegraph.node.NodeSlot`
-        :param scene: GraphicsScene that holds the source and target nodes
-        :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
-        :returns: An instance of this class
-        :rtype: :class:`nodegraph.node.NodeEdge`
-
-        """
-        QtGui.QGraphicsLineItem.__init__(self, parent=None, scene=scene)
-
-        self._source_slot = source_slot
-        self._target_slot = target_slot
-        self._outline = outline
-        self._arrow = arrow
-        self._lod = 1
-        self._shape = None
-
-        # Set tooltip
-        tooltip = ("%s(%s)  >> %s(%s)" %
-                         (source_slot.parentItem()._name, source_slot._name,
-                          target_slot.parentItem()._name, target_slot._name))
-        self.setToolTip(tooltip)
-
-        #self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
-
-        #self.setAcceptHoverEvents(True)
-        self.setZValue(-10)
-
-        # Update
-        self.update()
-
-
-    def _get_line(self):
-        # Resolve start and end point from current source and target position
-        start = (self._source_slot.parentItem().pos() +
-                 self._source_slot.pos() +
-                 self._source_slot.boundingRect().center())
-        end = (self._target_slot.parentItem().pos() +
-               self._target_slot.pos() +
-               self._target_slot.boundingRect().center())
-
-        return QtCore.QLineF(start, end)
-
-
-    def update(self):
-        """Update internal properties
-
-        """
-        # Update line
-        self.setLine(self._get_line())
-
-        # Update path
-        width = 1/self._lod if self._outline*self._lod < 1 else self._outline
-        norm = self.line().unitVector().normalVector()
-        norm = width*3*QtCore.QPointF(norm.x2()-norm.x1(),
-                                          norm.y2()-norm.y1())
-
-        self._shape = QtGui.QPainterPath()
-        poly = QtGui.QPolygonF([self.line().p1() - norm,
-                                self.line().p1() + norm,
-                                self.line().p2() + norm,
-                                self.line().p2() - norm])
-        self._shape.addPolygon(poly)
-        self._shape.closeSubpath()
-
-        QtGui.QGraphicsLineItem.update(self)
-
-
-    def shape(self):
-        """Re-implement shape method
-        Return a QPainterPath that represents the bounding shape
-
-        """
-        return self._shape
-
-
-    def boundingRect(self):
-        """Re-implement bounding box method
-
-        """
-        # Update node
-        #self.update()
-
-        # Infer bounding box from shape
-        return self._shape.controlPointRect()
-
-
-    def paint(self, painter, option, widget=None):
-        """Re-implement paint method
-
-        """
-        # Update level of detail
-        self._lod = option.levelOfDetailFromTransform(painter.worldTransform())
-
-        # Update brush
-        palette = (self.scene().palette() if self.scene()
-                   else option.palette)
-        brush = palette.text()
-        if option.state & QtGui.QStyle.State_Selected:
-            brush = palette.highlight()
-        elif option.state & QtGui.QStyle.State_MouseOver:
-            color = brush.color().darker(250)
-            brush.setColor(color)
-
-        # Update unit width
-        width = 1/self._lod if self._outline*self._lod < 1 else self._outline
-        self.setPen(QtGui.QPen(brush, width))
-
-        # Draw line
-        painter.setPen(self.pen())
-        painter.drawLine(self.line())
-
-        # Draw arrow if needed
-        if self._arrow and self._lod > 0.15:
-           # Construct arrow
-            matrix = QtGui.QMatrix()
-            matrix.rotate(-self.line().angle())
-            matrix.scale(width, width)
-
-            if self._arrow & self.ARROW_STANDARD:
-                poly = matrix.map(ARROW_STANDARD)
-            elif self._arrow & self.ARROW_SLIM:
-                poly = matrix.map(ARROW_SLIM)
-
-            vec = self.line().unitVector()
-            vec = (self.line().length()/2)*QtCore.QPointF(vec.x2() - vec.x1(),
-                                                          vec.y2() - vec.y1())
-            poly.translate(self.line().x1(), self.line().y1())
-            poly.translate(vec.x(), vec.y())
-
-            painter.setPen(QtCore.Qt.NoPen)
-            painter.setBrush(brush)
-            painter.drawPolygon(poly)
-
-        # Draw debug
-        if DEBUG:
-            painter.setBrush(QtGui.QBrush())
-            painter.setPen(QtGui.QColor(255, 0, 0))
-            painter.drawPath(self.shape())
-
-            painter.setPen(QtGui.QColor(0, 255, 0))
-            painter.drawRect(self.boundingRect())
-
-        return
-
-
-class NodeInteractiveEdge(NodeEdge):
-
-    """Draw an edge where one one the end point is the currrent mouse pos
-
-    """
-
-    def __init__(self, source_slot, mouse_pos, scene, outline=2, arrow=None):
-        """Creates an instance of this class
-
-            :param source: (<QPointF)
-                Source position
-            :param target: (<QPointF>)
-                Target position
-            :param scene: (<NodeGraphScene>)
-                GraphicsScene that holds the source and target nodes
-            :returns: (<NodeEdge>)
-
-        """
-        QtGui.QGraphicsLineItem.__init__(self, parent=None, scene=scene)
-
-        self._source_slot = source_slot
-        self._mouse_pos = mouse_pos
-        self._outline = outline
-        self._arrow = arrow
-        self._lod = 1
-        self._shape = None
-
-        self.setZValue(-10)
-
-        # Update line
-        self.update()
-
-
-    def _get_line(self):
-        start = self._mouse_pos
-        end = (self._source_slot.parentItem().pos() +
-               self._source_slot.pos() +
-               self._source_slot.boundingRect().center())
-        if self._source_slot.family & NodeSlot.OUTPUT:
-            start = end
-            end = self._mouse_pos
-        return QtCore.QLineF(start, end)
-
-
-    def refresh(self, mouse_pos, source_slot=None):
-        self._mouse_pos = mouse_pos
-        if source_slot:
-            self._source_slot = source_slot
-        self.update()
