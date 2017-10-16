@@ -1,7 +1,11 @@
 #==============================================================================
+# GNU LESSER GENERAL PUBLIC LICENSE
+# Version 3, 29 June 2007
 #
-#  Insert gnu license here
+# Everyone is permitted to copy and distribute verbatim copies of this license
+# document, but changing it is not allowed.
 #
+# Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
 #==============================================================================
 
 """
@@ -36,9 +40,11 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         # Redefine palette
         self.setBackgroundBrush(QtGui.QColor(60, 60, 60))
         palette = self.palette()
-        palette.setColor(QtGui.QPalette.Text, QtGui.QColor(220, 220, 220))
+        palette.setColor(QtGui.QPalette.Text, QtGui.QColor(210, 210, 210))
         palette.setColor(QtGui.QPalette.HighlightedText,
                          QtGui.QColor(255, 255, 255))
+        palette.setColor(QtGui.QPalette.BrightText,
+                         QtGui.QColor(80, 180, 255))
         palette.setColor(QtGui.QPalette.Button, QtGui.QColor(5, 5, 5))
         palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(20, 20, 20))
         self.setPalette(palette)
@@ -58,6 +64,14 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         """
         return self._edges
+
+
+    @property
+    def is_interactive_edge(self):
+        """Return status of interactive edge mode
+
+        """
+        return self._is_interactive_edge
 
 
     def create_node(self, name, inputs=["in"], parent=None):
@@ -129,7 +143,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             # Validate the connection
             if (found
                 and source.family != target.family
-                and source.parentItem() != target.parentItem()
+                and source.parent != target.parent
                 and not [e for e in self._edges if e._target_slot == source]):
 
 
@@ -137,10 +151,10 @@ class NodeGraphScene(QtGui.QGraphicsScene):
                 # source node opposite slot(s) are(n't) connected to the target
                 # node
                 if source.family == NodeSlot.OUTPUT:
-                    for aninput in source.parentItem()._inputs:
+                    for aninput in source.parent._inputs:
                         pass
                 else:
-                    output = source.parentItem()._output
+                    output = source.parent._output
                     #print([e for e in self._edges if e._source_slot == output])
 
 
@@ -188,6 +202,14 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         QtGui.QGraphicsScene.mouseMoveEvent(self, event)
 
+    # def mousePressEvent(self, event):
+
+    #     # Consumme event if we are currently creating an new edge
+    #     if self._is_interactive_edge:
+    #         event.accept()
+    #         return
+
+    #     QtGui.QGraphicsScene.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
         buttons = event.buttons()

@@ -1,11 +1,15 @@
 #==============================================================================
+# GNU LESSER GENERAL PUBLIC LICENSE
+# Version 3, 29 June 2007
 #
-#  Insert gnu license here
+# Everyone is permitted to copy and distribute verbatim copies of this license
+# document, but changing it is not allowed.
 #
+# Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
 #==============================================================================
 
 """
-Edge definition including
+Edge definition including:
 
     * Edge
     * InteractiveEdge
@@ -37,6 +41,7 @@ class Edge(QtGui.QGraphicsLineItem):
         :type target: :cLass:`nodegraph.node.NodeSlot`
         :param scene: GraphicsScene that holds the source and target nodes
         :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+
         :returns: An instance of this class
         :rtype: :class:`nodegraph.edge.Edge`
 
@@ -52,12 +57,11 @@ class Edge(QtGui.QGraphicsLineItem):
 
         # Set tooltip
         tooltip = ("%s(%s)  >> %s(%s)" %
-                         (source_slot.parentItem()._name, source_slot._name,
-                          target_slot.parentItem()._name, target_slot._name))
+                         (source_slot.parent._name, source_slot._name,
+                          target_slot.parent._name, target_slot._name))
         self.setToolTip(tooltip)
 
         #self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
-
         #self.setAcceptHoverEvents(True)
         self.setZValue(-10)
 
@@ -67,12 +71,12 @@ class Edge(QtGui.QGraphicsLineItem):
 
     def _get_line(self):
         # Resolve start and end point from current source and target position
-        start = (self._source_slot.parentItem().pos() +
-                 self._source_slot.pos() +
-                 self._source_slot.boundingRect().center())
-        end = (self._target_slot.parentItem().pos() +
-               self._target_slot.pos() +
-               self._target_slot.boundingRect().center())
+        start = self._source_slot.parent.pos()
+                 # self._source_slot.pos() +
+                 # self._source_slot.boundingRect().center())
+        end = self._target_slot.parent.pos()
+               # self._target_slot.pos() +
+               # self._target_slot.boundingRect().center())
 
         return QtCore.QLineF(start, end)
 
@@ -114,7 +118,7 @@ class Edge(QtGui.QGraphicsLineItem):
 
         """
         # Update node
-        #self.update()
+        self.update()
 
         # Infer bounding box from shape
         return self._shape.controlPointRect()
@@ -214,9 +218,9 @@ class InteractiveEdge(Edge):
 
     def _get_line(self):
         start = self._mouse_pos
-        end = (self._source_slot.parentItem().pos() +
-               self._source_slot.pos() +
-               self._source_slot.boundingRect().center())
+        end = self._source_slot.parent.pos()
+               # self._source_slot.pos() +
+               # self._source_slot.boundingRect().center())
         if self._source_slot.family & NodeSlot.OUTPUT:
             start = end
             end = self._mouse_pos

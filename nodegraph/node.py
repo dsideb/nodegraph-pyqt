@@ -1,7 +1,11 @@
 #==============================================================================
+# GNU LESSER GENERAL PUBLIC LICENSE
+# Version 3, 29 June 2007
 #
-#  Insert gnu license here
+# Everyone is permitted to copy and distribute verbatim copies of this license
+# document, but changing it is not allowed.
 #
+# Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
 #==============================================================================
 
 """
@@ -37,6 +41,7 @@ class Node(QtGui.QGraphicsItem):
         self._bbox = None # cache container
         self._round_slot = None
         self._rect_slot = None
+        self._hover_slot = False
 
         self.setFlags(QtGui.QGraphicsItem.ItemIsMovable |
                       QtGui.QGraphicsItem.ItemIsSelectable)
@@ -44,21 +49,12 @@ class Node(QtGui.QGraphicsItem):
         self.setAcceptHoverEvents(False)
 
         # Build output slot
-        self._output = NodeSlot("out", scene,
-                                family=NodeSlot.OUTPUT,
-                                radius=self._slot_radius,
-                                outline=self._outline,
-                                label=NodeSlotLabel.LABEL_LEFT,
-                                parent=self)
+        self._output = NodeSlot("out", self, family=NodeSlot.OUTPUT)
 
         # Build input slots
         self._inputs = []
         for slot_name in inputs:
-            aninput = NodeSlot(slot_name, scene,
-                               radius=self._slot_radius,
-                               outline=self._outline,
-                               label=NodeSlotLabel.LABEL_RIGHT,
-                               parent=self)
+            aninput = NodeSlot(slot_name, self)
             self._inputs.append(aninput)
 
         self._update()
@@ -132,7 +128,7 @@ class Node(QtGui.QGraphicsItem):
 
         # Draw text
         if lod >= 0.4:
-            font = QtGui.QFont("Arial", 12)
+            font = QtGui.QFont("Arial", 14)
             font.setStyleStrategy(QtGui.QFont.ForceOutline)
             painter.setFont(font)
             painter.setPen(QtGui.QPen(text_brush, 1))
@@ -145,6 +141,10 @@ class Node(QtGui.QGraphicsItem):
             self.setAcceptHoverEvents(True)
             painter.setBrush(self.scene().palette().text())
             painter.setPen(QtGui.QPen(fill_brush, self._outline))
+
+            if self._hover_slot:
+                # Hover color should be driven by slot type
+                painter.setBrush(self.scene().palette().highlightedText())
 
             if lod >= 0.35:
                 # Draw output (Ellipse)
@@ -165,8 +165,8 @@ class Node(QtGui.QGraphicsItem):
             self.setAcceptHoverEvents(False)
 
         # Draw slot labels
-        if lod >= 0.6:
-            font = QtGui.QFont("Arial", 10)
+        if lod >= 0.4:
+            font = QtGui.QFont("Arial", 12)
             font.setStyleStrategy(QtGui.QFont.ForceOutline)
             painter.setFont(font)
             painter.setPen(QtGui.QPen(self.scene().palette().text(), 1))
@@ -202,7 +202,9 @@ class Node(QtGui.QGraphicsItem):
         rect.moveTo(self._output_pos)
 
         if rect.contains(event.pos()):
-            print("Hover slot")
+            self._update_hover_slot(True)
+        else:
+            self._update_hover_slot(False)
 
         # Call normal behavior
         QtGui.QGraphicsItem.hoverMoveEvent(self, event)
@@ -222,14 +224,37 @@ class Node(QtGui.QGraphicsItem):
             rect.moveTo(self._output_pos)
 
             if rect.contains(event.pos()):
-                print("Click on slot")
                 mouse_pos = self.mapToScene(event.pos())
                 self.scene().start_interactive_edge(self._output, mouse_pos)
                 event.accept()
-
-                return None
+                return
 
         QtGui.QGraphicsItem.mousePressEvent(self, event)
+
+    def mouseMoveEvent(self, event):
+        """
+
+        """
+        buttons = event.buttons()
+        modifiers = event.modifiers()
+
+        if buttons == QtCore.Qt.LeftButton:
+            if self.scene().is_interactive_edge:
+                # Edge creation mode, consumming event
+                event.accept()
+                return
+
+        QtGui.QGraphicsItem.mouseMoveEvent(self, event)
+
+
+    def _update_hover_slot(self, slot):
+        if slot == self._hover_slot:
+            # No change
+            return
+
+        self._hover_slot = slot
+        self.update()
+
 
 class NodeSlot(object):
 
@@ -241,21 +266,21 @@ class NodeSlot(object):
     INPUT = 0
     OUTPUT = 1
 
-    def __init__(self, name, scene, family=None, radius=10, outline=6,
-        label=None, parent=None):
+    def __init__(self, name, parent, family=None):
         """Instance this class
 
         """
         #QtGui.QGraphicsItem.__init__(self, parent=parent, scene=scene)
         self._name = name
+        self.parent = parent
         self._family = family or self.INPUT
-        self._radius = radius
-        self._outline = outline
-        self._label = None
-        self._lod = 1
-        self._bbox = None # cache container
-        self._round_slot = None
-        self._rect_slot = None
+        #self._radius = radius
+        #self._outline = outline
+        #self._label = None
+        #self._lod = 1
+        #self._bbox = None # cache container
+        #self._round_slot = None
+        #self._rect_slot = None
 
         #self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
         #self.setAcceptHoverEvents(True)
@@ -264,7 +289,7 @@ class NodeSlot(object):
         #if self._label:
         #    self.build_label()
 
-        self._update()
+        #self._update()
 
     @property
     def family(self):
@@ -274,67 +299,67 @@ class NodeSlot(object):
         return self._family
 
 
-    def _update(self):
-        """Update node slot
+    # def _update(self):
+    #     """Update node slot
 
-        """
-        self._bbox = QtCore.QRectF(- self._outline/2,
-                                   - self._outline/2,
-                                   self._radius*2 + self._outline,
-                                   self._radius*2 + self._outline)
+    #     """
+    #     self._bbox = QtCore.QRectF(- self._outline/2,
+    #                                - self._outline/2,
+    #                                self._radius*2 + self._outline,
+    #                                self._radius*2 + self._outline)
 
-        self._draw_rect = QtCore.QRectF(0, 0, self._radius*2, self._radius*2)
-
-
-    def boundingRect(self):
-        """Return a QRectF that represents the bounding box.
-        Here that sould be the bounding box of the slot.
-
-        """
-        return self._bbox
+    #     self._draw_rect = QtCore.QRectF(0, 0, self._radius*2, self._radius*2)
 
 
-    def paint(self, painter, option, widget=None):
-        """Re-implement paint function
+    # def boundingRect(self):
+    #     """Return a QRectF that represents the bounding box.
+    #     Here that sould be the bounding box of the slot.
 
-        """
-        # Resolve level of detail
-        self._lod = option.levelOfDetailFromTransform(painter.worldTransform())
+    #     """
+    #     return self._bbox
 
-        # Resolve fill brush
-        fill_brush = self.scene().palette().text()
-        outline_brush = self.scene().palette().button()
-        if option.state & QtGui.QStyle.State_Selected:
-            outline_brush = self.scene().palette().highlight()
-        if option.state & QtGui.QStyle.State_MouseOver:
-            fill_color = fill_brush.color().darker(250)
-            fill_brush.setColor(fill_color)
 
-        painter.setBrush(fill_brush)
-        painter.setPen(QtGui.QPen(outline_brush, self._outline))
+    # def paint(self, painter, option, widget=None):
+    #     """Re-implement paint function
 
-        # Draw slot
-        if self._lod >= 0.35:
-            painter.drawEllipse(self._draw_rect)
-        else:
-            painter.drawRect(self._draw_rect)
+    #     """
+    #     # Resolve level of detail
+    #     self._lod = option.levelOfDetailFromTransform(painter.worldTransform())
 
-        # Hide/show label
-        if self._label:
-            if self._lod >= 0.6:
-                for child in self.childItems():
-                    child.setVisible(True)
-            else:
-                for child in self.childItems():
-                    child.setVisible(False)
+    #     # Resolve fill brush
+    #     fill_brush = self.scene().palette().text()
+    #     outline_brush = self.scene().palette().button()
+    #     if option.state & QtGui.QStyle.State_Selected:
+    #         outline_brush = self.scene().palette().highlight()
+    #     if option.state & QtGui.QStyle.State_MouseOver:
+    #         fill_color = fill_brush.color().darker(250)
+    #         fill_brush.setColor(fill_color)
 
-        # Draw debug
-        if DEBUG:
-            painter.setBrush(QtGui.QBrush())
-            painter.setPen(QtGui.QColor(0, 0, 255))
-            painter.drawRect(self.boundingRect())
+    #     painter.setBrush(fill_brush)
+    #     painter.setPen(QtGui.QPen(outline_brush, self._outline))
 
-        return
+    #     # Draw slot
+    #     if self._lod >= 0.35:
+    #         painter.drawEllipse(self._draw_rect)
+    #     else:
+    #         painter.drawRect(self._draw_rect)
+
+    #     # Hide/show label
+    #     if self._label:
+    #         if self._lod >= 0.6:
+    #             for child in self.childItems():
+    #                 child.setVisible(True)
+    #         else:
+    #             for child in self.childItems():
+    #                 child.setVisible(False)
+
+    #     # Draw debug
+    #     if DEBUG:
+    #         painter.setBrush(QtGui.QBrush())
+    #         painter.setPen(QtGui.QColor(0, 0, 255))
+    #         painter.drawRect(self.boundingRect())
+
+    #     return
 
 
     # def mousePressEvent(self, event):

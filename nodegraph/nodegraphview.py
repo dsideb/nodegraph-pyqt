@@ -1,7 +1,11 @@
 #==============================================================================
+# GNU LESSER GENERAL PUBLIC LICENSE
+# Version 3, 29 June 2007
 #
-#  Insert gnu license here
+# Everyone is permitted to copy and distribute verbatim copies of this license
+# document, but changing it is not allowed.
 #
+# Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
 #==============================================================================
 
 """
@@ -52,14 +56,14 @@ class NodeGraphView(QtGui.QGraphicsView):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
         self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
+        #self.setRenderHint(QtGui.QPainter.Antialiasing)
         #self.setRenderHint(QtGui.QPainter.TextAntialiasing)
         #self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.setRubberBandSelectionMode(QtCore.Qt.ContainsItemBoundingRect)
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                           QtGui.QSizePolicy.Expanding)
+        # self.setSizePolicy(QtGui.QSizePolicy.Expanding,
+        #                    QtGui.QSizePolicy.Expanding)
 
         # Init scene
         self.setInteractive(True)
@@ -194,21 +198,22 @@ class NodeGraphView(QtGui.QGraphicsView):
         #self.setInteractive(True)
 
 
-    def mousePressEvent(self, event):
+    # def mousePressEvent(self, event):
 
-        # Consumme event if we are currently creating an new edge
-        if self.scene()._is_interactive_edge:
-            event.accept()
-            return
+    #     # Consumme event if we are currently creating an new edge
+    #     if self.scene()._is_interactive_edge:
+    #         print("click clickety")
+    #         event.accept()
+    #         return
 
-        buttons = event.buttons()
-        modifiers = event.modifiers()
+    #     buttons = event.buttons()
+    #     modifiers = event.modifiers()
 
-        if buttons == QtCore.Qt.LeftButton:
-            #print("Button pressed!")
-            pass
+    #     if buttons == QtCore.Qt.LeftButton:
+    #         #print("Button pressed!")
+    #         pass
 
-        QtGui.QGraphicsView.mousePressEvent(self, event)
+    #     QtGui.QGraphicsView.mousePressEvent(self, event)
 
 
     # def mouseMoveEvent(self, event):
