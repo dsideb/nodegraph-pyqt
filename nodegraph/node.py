@@ -100,6 +100,7 @@ class Node(QtGui.QGraphicsItem):
         """Re-implement paint method
 
         """
+        #print("Redraw %s" % self._name)
         lod = option.levelOfDetailFromTransform(painter.worldTransform())
 
         # Resolve fill, text and outlines brush

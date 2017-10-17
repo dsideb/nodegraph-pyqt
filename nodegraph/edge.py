@@ -21,7 +21,7 @@ from constant import DEBUG
 from polygons import ARROW_STANDARD, ARROW_SLIM
 from .node import NodeSlot
 
-class Edge(QtGui.QGraphicsLineItem):
+class Edge(QtGui.QGraphicsItem):
 
     """
     Node Edge base class that displays a directed line between two slots
@@ -46,7 +46,7 @@ class Edge(QtGui.QGraphicsLineItem):
         :rtype: :class:`nodegraph.edge.Edge`
 
         """
-        QtGui.QGraphicsLineItem.__init__(self, parent=None, scene=scene)
+        QtGui.QGraphicsItem.__init__(self, parent=None, scene=scene)
 
         self._source_slot = source_slot
         self._target_slot = target_slot
@@ -54,6 +54,7 @@ class Edge(QtGui.QGraphicsLineItem):
         self._arrow = arrow
         self._lod = 1
         self._shape = None
+        self._line = None
 
         # Set tooltip
         tooltip = ("%s(%s)  >> %s(%s)" %
@@ -61,24 +62,26 @@ class Edge(QtGui.QGraphicsLineItem):
                           target_slot.parent._name, target_slot._name))
         self.setToolTip(tooltip)
 
-        #self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
-        #self.setAcceptHoverEvents(True)
+        self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
+        self.setAcceptHoverEvents(True)
         self.setZValue(-10)
 
+        self.setPos(self._source_slot.parent.pos())
         # Update
         self.update()
 
 
-    def _get_line(self):
+    def _update_line(self):
         # Resolve start and end point from current source and target position
-        start = self._source_slot.parent.pos()
+        #start = self._source_slot.parent.pos()
+        start = QtCore.QPointF(0, 0)
                  # self._source_slot.pos() +
                  # self._source_slot.boundingRect().center())
-        end = self._target_slot.parent.pos()
+        end = self._target_slot.parent.pos() - self._source_slot.parent.pos()
                # self._target_slot.pos() +
                # self._target_slot.boundingRect().center())
 
-        return QtCore.QLineF(start, end)
+        self._line = QtCore.QLineF(start, end)
 
 
     def update(self):
@@ -86,19 +89,19 @@ class Edge(QtGui.QGraphicsLineItem):
 
         """
         # Update line
-        self.setLine(self._get_line())
+        self._update_line()
 
         # Update path
         width = 1/self._lod if self._outline*self._lod < 1 else self._outline
-        norm = self.line().unitVector().normalVector()
+        norm = self._line.unitVector().normalVector()
         norm = width*3*QtCore.QPointF(norm.x2()-norm.x1(),
                                           norm.y2()-norm.y1())
 
         self._shape = QtGui.QPainterPath()
-        poly = QtGui.QPolygonF([self.line().p1() - norm,
-                                self.line().p1() + norm,
-                                self.line().p2() + norm,
-                                self.line().p2() - norm])
+        poly = QtGui.QPolygonF([self._line.p1() - norm,
+                                self._line.p1() + norm,
+                                self._line.p2() + norm,
+                                self._line.p2() - norm])
         self._shape.addPolygon(poly)
         self._shape.closeSubpath()
 
@@ -118,11 +121,10 @@ class Edge(QtGui.QGraphicsLineItem):
 
         """
         # Update node
-        self.update()
+        #self.update()
 
         # Infer bounding box from shape
         return self._shape.controlPointRect()
-
 
     def paint(self, painter, option, widget=None):
         """Re-implement paint method
@@ -143,17 +145,16 @@ class Edge(QtGui.QGraphicsLineItem):
 
         # Update unit width
         width = 1/self._lod if self._outline*self._lod < 1 else self._outline
-        self.setPen(QtGui.QPen(brush, width))
 
         # Draw line
-        painter.setPen(self.pen())
-        painter.drawLine(self.line())
+        painter.setPen(QtGui.QPen(brush, width))
+        painter.drawLine(self._line)
 
         # Draw arrow if needed
         if self._arrow and self._lod > 0.15:
            # Construct arrow
             matrix = QtGui.QMatrix()
-            matrix.rotate(-self.line().angle())
+            matrix.rotate(-self._line.angle())
             matrix.scale(width, width)
 
             if self._arrow & self.ARROW_STANDARD:
@@ -161,10 +162,10 @@ class Edge(QtGui.QGraphicsLineItem):
             elif self._arrow & self.ARROW_SLIM:
                 poly = matrix.map(ARROW_SLIM)
 
-            vec = self.line().unitVector()
-            vec = (self.line().length()/2)*QtCore.QPointF(vec.x2() - vec.x1(),
+            vec = self._line.unitVector()
+            vec = (self._line.length()/2)*QtCore.QPointF(vec.x2() - vec.x1(),
                                                           vec.y2() - vec.y1())
-            poly.translate(self.line().x1(), self.line().y1())
+            poly.translate(self._line.x1(), self._line.y1())
             poly.translate(vec.x(), vec.y())
 
             painter.setPen(QtCore.Qt.NoPen)
@@ -201,7 +202,7 @@ class InteractiveEdge(Edge):
             :returns: (<Edge>)
 
         """
-        QtGui.QGraphicsLineItem.__init__(self, parent=None, scene=scene)
+        QtGui.QGraphicsItem.__init__(self, parent=None, scene=scene)
 
         self._source_slot = source_slot
         self._mouse_pos = mouse_pos
@@ -209,6 +210,7 @@ class InteractiveEdge(Edge):
         self._arrow = arrow
         self._lod = 1
         self._shape = None
+        self._line = None
 
         self.setZValue(-10)
 
@@ -216,7 +218,7 @@ class InteractiveEdge(Edge):
         self.update()
 
 
-    def _get_line(self):
+    def _update_line(self):
         start = self._mouse_pos
         end = self._source_slot.parent.pos()
                # self._source_slot.pos() +
@@ -224,11 +226,12 @@ class InteractiveEdge(Edge):
         if self._source_slot.family & NodeSlot.OUTPUT:
             start = end
             end = self._mouse_pos
-        return QtCore.QLineF(start, end)
+        self._line = QtCore.QLineF(start, end)
 
 
     def refresh(self, mouse_pos, source_slot=None):
         self._mouse_pos = mouse_pos
         if source_slot:
             self._source_slot = source_slot
+        self.prepareGeometryChange()
         self.update()
