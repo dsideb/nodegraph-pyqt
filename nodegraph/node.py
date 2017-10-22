@@ -25,6 +25,9 @@ class Node(QtGui.QGraphicsItem):
     """
     Base class for node graphic item
 
+    As nuch as possible, everything is drawn in the node paint function for
+    performance reasons.
+
     """
 
     def __init__(self, name, scene, inputs=["in"], parent=None):
@@ -57,7 +60,16 @@ class Node(QtGui.QGraphicsItem):
             aninput = NodeSlot(slot_name, self)
             self._inputs.append(aninput)
 
+        # Update internal containers
         self._update()
+
+
+    @property
+    def name(self):
+        """Return the family of the slot
+
+        """
+        return self._name
 
 
     def _update(self):
@@ -67,18 +79,19 @@ class Node(QtGui.QGraphicsItem):
         slot_height = self._slot_radius*2 + self._outline
         base_y = self._height/2 + self._label_height/2 + self._outline/2
 
-        # Update output
-        init_y = base_y - slot_height/2
-        self._output_pos = QtCore.QPointF(self._width - self._slot_radius,
-                                          init_y)
-
-        # # Update inputs
-        # init_y = base_y - slot_height*len(self._inputs)/2
-        # for i, _input in enumerate(self._inputs):
-        #     self._inputs[i].setPos(-self._slot_radius, init_y+ slot_height*i)
-
+        # Update base slot bounding box
         self._draw_slot = QtCore.QRectF(0, 0, self._slot_radius*2,
                                         self._slot_radius*2)
+        # Update output
+        init_y = base_y - slot_height/2
+        self._output.rect = QtCore.QRectF(self._draw_slot).translated(
+            self._width - self._slot_radius, init_y)
+
+        # # Update inputs
+        init_y = base_y - slot_height*len(self._inputs)/2
+        for i, _input in enumerate(self._inputs):
+            self._inputs[i].rect = QtCore.QRectF(self._draw_slot).translated(
+                -self._slot_radius, init_y+ slot_height*i)
 
         # Update bounding box
         self._bbox = QtCore.QRectF(
@@ -149,25 +162,24 @@ class Node(QtGui.QGraphicsItem):
 
             if lod >= 0.35:
                 # Draw output (Ellipse)
-                rect = QtCore.QRectF(self._draw_slot)
-                rect.moveTo(self._output_pos)
-                painter.drawEllipse(rect)
+                painter.drawEllipse(self._output._rect)
 
                 # Draw input (Ellipse)
-                # for aninput in self._inputs:
-                #     rect = QtCore.QRect(self._draw_slot)
-                #     rect.moveTo(self._inputs)
+                for aninput in self._inputs:
+                    painter.drawEllipse(aninput.rect)
             else:
                 # Draw output (Rectangle)
-                rect = QtCore.QRectF(self._draw_slot)
-                rect.moveTo(self._output_pos)
-                painter.drawRect(rect)
+                painter.drawRect(self._output._rect)
+
+                # Drae input (Rectangle)
+                for aninput in self._inputs:
+                    painter.drawRect(aninput.rect)
         else:
             self.setAcceptHoverEvents(False)
 
         # Draw slot labels
-        if lod >= 0.4:
-            font = QtGui.QFont("Arial", 12)
+        if lod >= 0.5:
+            font = QtGui.QFont("Arial", 11)
             font.setStyleStrategy(QtGui.QFont.ForceOutline)
             painter.setFont(font)
             painter.setPen(QtGui.QPen(self.scene().palette().text(), 1))
@@ -177,14 +189,22 @@ class Node(QtGui.QGraphicsItem):
 
             # Output
             alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight
-            rect = QtCore.QRectF(self._width/2, self._output_pos.y(),
+            rect = QtCore.QRectF(self._width/2, self._output._rect.top(),
                                   width, height)
             painter.drawText(rect, alignment, "out")
+            # painter.setBrush(QtCore.Qt.NoBrush)
+            # painter.drawRect(rect)
 
             # Input
-            #alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft
-            #rect = QtCore.QRectF(height + self._outline, 0, width, height)
-            #painter.drawText(rect, alignment, "in")
+            alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft
+            for aninput in self._inputs:
+                rect = QtCore.QRectF(self._slot_radius + self._outline,
+                                     aninput._rect.top(),
+                                     width,
+                                     height)
+                painter.drawText(rect, alignment, aninput.name)
+                # painter.setBrush(QtCore.Qt.NoBrush)
+                # painter.drawRect(rect)
 
         # Draw debug
         if DEBUG:
@@ -199,10 +219,7 @@ class Node(QtGui.QGraphicsItem):
         """
 
         """
-        rect = QtCore.QRectF(self._draw_slot)
-        rect.moveTo(self._output_pos)
-
-        if rect.contains(event.pos()):
+        if self._output._rect.contains(event.pos()):
             self._update_hover_slot(True)
         else:
             self._update_hover_slot(False)
@@ -221,16 +238,15 @@ class Node(QtGui.QGraphicsItem):
         modifiers = event.modifiers()
 
         if buttons == QtCore.Qt.LeftButton:
-            rect = QtCore.QRectF(self._draw_slot)
-            rect.moveTo(self._output_pos)
 
-            if rect.contains(event.pos()):
+            if self._output._rect.contains(event.pos()):
                 mouse_pos = self.mapToScene(event.pos())
                 self.scene().start_interactive_edge(self._output, mouse_pos)
                 event.accept()
                 return
 
         QtGui.QGraphicsItem.mousePressEvent(self, event)
+
 
     def mouseMoveEvent(self, event):
         """
@@ -275,22 +291,16 @@ class NodeSlot(object):
         self._name = name
         self.parent = parent
         self._family = family or self.INPUT
-        #self._radius = radius
-        #self._outline = outline
-        #self._label = None
-        #self._lod = 1
-        #self._bbox = None # cache container
-        #self._round_slot = None
-        #self._rect_slot = None
+        self._rect = None
 
-        #self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
-        #self.setAcceptHoverEvents(True)
 
-        # Create text label if required
-        #if self._label:
-        #    self.build_label()
+    @property
+    def name(self):
+        """Return the family of the slot
 
-        #self._update()
+        """
+        return self._name
+
 
     @property
     def family(self):
@@ -300,155 +310,27 @@ class NodeSlot(object):
         return self._family
 
 
-    # def _update(self):
-    #     """Update node slot
-
-    #     """
-    #     self._bbox = QtCore.QRectF(- self._outline/2,
-    #                                - self._outline/2,
-    #                                self._radius*2 + self._outline,
-    #                                self._radius*2 + self._outline)
-
-    #     self._draw_rect = QtCore.QRectF(0, 0, self._radius*2, self._radius*2)
-
-
-    # def boundingRect(self):
-    #     """Return a QRectF that represents the bounding box.
-    #     Here that sould be the bounding box of the slot.
-
-    #     """
-    #     return self._bbox
-
-
-    # def paint(self, painter, option, widget=None):
-    #     """Re-implement paint function
-
-    #     """
-    #     # Resolve level of detail
-    #     self._lod = option.levelOfDetailFromTransform(painter.worldTransform())
-
-    #     # Resolve fill brush
-    #     fill_brush = self.scene().palette().text()
-    #     outline_brush = self.scene().palette().button()
-    #     if option.state & QtGui.QStyle.State_Selected:
-    #         outline_brush = self.scene().palette().highlight()
-    #     if option.state & QtGui.QStyle.State_MouseOver:
-    #         fill_color = fill_brush.color().darker(250)
-    #         fill_brush.setColor(fill_color)
-
-    #     painter.setBrush(fill_brush)
-    #     painter.setPen(QtGui.QPen(outline_brush, self._outline))
-
-    #     # Draw slot
-    #     if self._lod >= 0.35:
-    #         painter.drawEllipse(self._draw_rect)
-    #     else:
-    #         painter.drawRect(self._draw_rect)
-
-    #     # Hide/show label
-    #     if self._label:
-    #         if self._lod >= 0.6:
-    #             for child in self.childItems():
-    #                 child.setVisible(True)
-    #         else:
-    #             for child in self.childItems():
-    #                 child.setVisible(False)
-
-    #     # Draw debug
-    #     if DEBUG:
-    #         painter.setBrush(QtGui.QBrush())
-    #         painter.setPen(QtGui.QColor(0, 0, 255))
-    #         painter.drawRect(self.boundingRect())
-
-    #     return
-
-
-    # def mousePressEvent(self, event):
-    #     """Re-implement mouse press event
-
-    #     """
-    #     buttons = event.buttons()
-    #     modifiers = event.modifiers()
-
-    #     if buttons == QtCore.Qt.LeftButton:
-    #         # msg = ("%s (%s) slot %s pressed!" %
-    #         #        (self.parentItem()._name, self._family, self._name))
-    #         # print(msg)
-    #         mouse_pos = self.mapToScene(event.pos())
-    #         self.scene().start_interactive_edge(self, mouse_pos)
-
-    #     QtGui.QGraphicsItem.mousePressEvent(self, event)
-
-
-    # def build_label(self):
-    #     """
-
-    #     """
-    #     width = self.parentItem()._width/2 - self._radius - self._outline
-    #     height = self._radius*2
-    #     return NodeSlotLabel(self._name, width, height, self._label, self)
-
-
-class NodeSlotLabel(QtGui.QGraphicsSimpleTextItem):
-
-    """
-    Handles drawing of a node slot label
-
-    """
-
-    LABEL_LEFT = 1
-    LABEL_RIGHT = 2
-
-    def __init__(self, text, width, height, mode, parent=None):
-        """Instance this class
+    @property
+    def rect(self):
+        """Return bounding box of slot
 
         """
-        QtGui.QGraphicsSimpleTextItem.__init__(self, text, parent=parent)
-
-        self._text = text
-        self._width = width
-        self._height = height
-        self._outline = parent._outline
-        self._mode = mode
-
-        font = QtGui.QFont("Arial", 10)
-        font.setStyleStrategy(QtGui.QFont.ForceOutline)
-        self.setFont(font)
-        self.setPen(QtGui.QPen(self.scene().palette().text(), 1))
+        return self._rect
 
 
-    def boundingRect(self):
-        """Return a QRectF that represents the bounding box.
-        Here that sould be the bounding box label
+    @rect.setter
+    def rect(self, value):
+        """ Set property rect
+
+            :param value: class::`QtCore.QRectF`
+        """
+        self._rect = value
+
+
+    @property
+    def center(self):
+        """Return center point of the slot in scene coordinates
 
         """
-        if self._mode & self.LABEL_RIGHT:
-            rect = QtCore.QRectF(self._height + self._outline, 0,
-                                 self._width, self._height)
-        elif self._mode & self.LABEL_LEFT:
-            rect = QtCore.QRectF(- self._width -self._outline, 0,
-                                 self._width, self._height)
-        return rect
+        return self.parent.mapToScene(self._rect.center())
 
-
-    def paint(self, painter, option, widget=None):
-        """Re-implement paint method
-
-        """
-        if self._mode & self.LABEL_RIGHT:
-            alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft
-        elif self._mode & self.LABEL_LEFT:
-            alignment = QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight
-
-        # Draw label
-        painter.setFont(self.font())
-        painter.setPen(self.pen())
-        painter.drawText(self.boundingRect(), alignment, self._text)
-
-        # Draw debug
-        if DEBUG:
-            painter.setBrush(QtGui.QBrush())
-            painter.setPen(QtGui.QColor(255, 0, 255))
-            painter.drawRect(self.boundingRect())
-
-        return

@@ -41,4 +41,3 @@ Performances issues:
   * Using regular viewport allows for partial redraw but then edges are not redrawn well (most likely because of shape/bbox too tight and/or way of being updated)
   * Hierarchy of graphicsItem contained by a Node (NodeSlot, NodeSlotLabel) is forcing QT to multiply draw calls (3 instead of 1). KILLING rubber band selection refresh.
   * Knobs have to be set visible (or not) on every redraw.
-

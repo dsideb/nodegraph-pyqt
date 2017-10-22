@@ -43,8 +43,8 @@ class NodeGraphView(QtGui.QGraphicsView):
 
         # Set scene rectangle
         self.scene().setSceneRect(
-                QtCore.QRectF(-self._width/2, -self._height/2,
-                              self._width, self._height))
+            QtCore.QRectF(-self._width/2, -self._height/2,
+                          self._width, self._height))
 
         # Enable OpenGL
         # GL_format = QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers)
@@ -56,10 +56,11 @@ class NodeGraphView(QtGui.QGraphicsView):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
         self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
-        #self.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.setRenderHint(QtGui.QPainter.Antialiasing)
         #self.setRenderHint(QtGui.QPainter.TextAntialiasing)
         #self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
+        self.setViewportUpdateMode(
+            QtGui.QGraphicsView.BoundingRectViewportUpdate)
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.setRubberBandSelectionMode(QtCore.Qt.ContainsItemBoundingRect)
         # self.setSizePolicy(QtGui.QSizePolicy.Expanding,

@@ -58,15 +58,15 @@ class Edge(QtGui.QGraphicsItem):
 
         # Set tooltip
         tooltip = ("%s(%s)  >> %s(%s)" %
-                         (source_slot.parent._name, source_slot._name,
-                          target_slot.parent._name, target_slot._name))
+                   (source_slot.parent._name, source_slot._name,
+                   target_slot.parent._name, target_slot._name))
         self.setToolTip(tooltip)
+
 
         self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
         self.setZValue(-10)
 
-        self.setPos(self._source_slot.parent.pos())
         # Update
         self.update()
 
@@ -77,7 +77,8 @@ class Edge(QtGui.QGraphicsItem):
         start = QtCore.QPointF(0, 0)
                  # self._source_slot.pos() +
                  # self._source_slot.boundingRect().center())
-        end = self._target_slot.parent.pos() - self._source_slot.parent.pos()
+        end = self._target_slot.center - self._source_slot.center
+        #end = self._target_slot.parent.pos()
                # self._target_slot.pos() +
                # self._target_slot.boundingRect().center())
 
@@ -88,6 +89,9 @@ class Edge(QtGui.QGraphicsItem):
         """Update internal properties
 
         """
+        # Update position
+        self.setPos(self._source_slot.center)
+
         # Update line
         self._update_line()
 
@@ -125,6 +129,7 @@ class Edge(QtGui.QGraphicsItem):
 
         # Infer bounding box from shape
         return self._shape.controlPointRect()
+
 
     def paint(self, painter, option, widget=None):
         """Re-implement paint method
