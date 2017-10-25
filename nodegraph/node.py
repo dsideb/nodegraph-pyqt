@@ -244,6 +244,12 @@ class Node(QtGui.QGraphicsItem):
                 self.scene().start_interactive_edge(self._output, mouse_pos)
                 event.accept()
                 return
+            for aninput in self._inputs:
+                if aninput._rect.contains(event.pos()):
+                    mouse_pos = self.mapToScene(event.pos())
+                    self.scene().start_interactive_edge(aninput, mouse_pos)
+                    event.accept()
+                    return
 
         QtGui.QGraphicsItem.mousePressEvent(self, event)
 

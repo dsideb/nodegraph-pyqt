@@ -41,6 +41,10 @@ class Edge(QtGui.QGraphicsItem):
         :type target: :cLass:`nodegraph.node.NodeSlot`
         :param scene: GraphicsScene that holds the source and target nodes
         :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+        :param outline: Width of the edge and arrow outline
+        :type outline: int
+        :param arrow: Define type of arrow. By default, no arrow is drawn
+        :type arrow: int
 
         :returns: An instance of this class
         :rtype: :class:`nodegraph.edge.Edge`
@@ -85,7 +89,7 @@ class Edge(QtGui.QGraphicsItem):
         self._line = QtCore.QLineF(start, end)
 
 
-    def update(self):
+    def _update(self):
         """Update internal properties
 
         """
@@ -94,6 +98,14 @@ class Edge(QtGui.QGraphicsItem):
 
         # Update line
         self._update_line()
+
+
+    def update(self):
+        """Update edge
+
+        """
+        # Update internal containers
+        self._update()
 
         # Update path
         width = 1/self._lod if self._outline*self._lod < 1 else self._outline
@@ -189,6 +201,24 @@ class Edge(QtGui.QGraphicsItem):
         return
 
 
+    def refresh(self, source_slot=None, target_slot=None):
+        """Update start/end position if provided and force
+        redraw
+
+        :param source_slot: Source slot (output or input)
+        :type source_slot: :class:`nodegraph.node.NodeSlot`
+        :param target_slot: Source slot (output or input)
+        :type target_slot: :class:`nodegraph.node.NodeSlot`
+
+        """
+        if source_slot:
+            self._source_slot = source_slot
+        if target_slot:
+            self._target_slot = target_slot
+        self.prepareGeometryChange()
+        self.update()
+
+
 class InteractiveEdge(Edge):
 
     """Draw an edge where one one the end point is the currrent mouse pos
@@ -198,13 +228,19 @@ class InteractiveEdge(Edge):
     def __init__(self, source_slot, mouse_pos, scene, outline=2, arrow=None):
         """Creates an instance of this class
 
-            :param source: (<QPointF)
-                Source position
-            :param target: (<QPointF>)
-                Target position
-            :param scene: (<NodeGraphScene>)
-                GraphicsScene that holds the source and target nodes
-            :returns: (<Edge>)
+        :param source: Source slot (should be a output one)
+        :type source: :class:`nodegraph.node.NodeSlot`
+        :param mouse_pos: Current scene position for mouse
+        :type mouse: :class:`QtCore.QPointF`
+        :param scene: GraphicsScene that holds the source and target nodes
+        :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+        :param outline: Width of the edge and arrow outline
+        :type outline: int
+        :param arrow: Define type of arrow. By default, no arrow is drawn
+        :type arrow: int
+
+        :returns: An instance of this class
+        :rtype: :class:`nodegraph.edge.InteractiveEdge`
 
         """
         QtGui.QGraphicsItem.__init__(self, parent=None, scene=scene)
@@ -224,17 +260,44 @@ class InteractiveEdge(Edge):
 
 
     def _update_line(self):
-        start = self._mouse_pos
-        end = self._source_slot.parent.pos()
-               # self._source_slot.pos() +
-               # self._source_slot.boundingRect().center())
+        """Re-implement function that updates edge line definition
+
+        """
+        start = QtCore.QPoint(0, 0)
         if self._source_slot.family & NodeSlot.OUTPUT:
-            start = end
-            end = self._mouse_pos
+            end = self._mouse_pos - self._source_slot.center
+        else:
+            end = self._source_slot.center - self._mouse_pos
+
         self._line = QtCore.QLineF(start, end)
 
 
+    def _update(self):
+        """Re-implement function that updates internal container
+
+        """
+        if self._source_slot.family & NodeSlot.OUTPUT:
+            position = self._source_slot.center
+        else:
+            position = self._mouse_pos
+
+        # Update position
+        self.setPos(position)
+
+        # Update line
+        self._update_line()
+
+
     def refresh(self, mouse_pos, source_slot=None):
+        """Re-implement function that updates start/end position and force
+        redraw
+
+        :param mouse_pos: Scene position of the mouse
+        :type mouse_pos: :class:`QtCore.QPointF`
+        :param source_slot: Source slot (output or input)
+        :type source_slot: :class:`nodegraph.node.NodeSlot`
+
+        """
         self._mouse_pos = mouse_pos
         if source_slot:
             self._source_slot = source_slot

@@ -157,8 +157,6 @@ class NodeGraphScene(QtGui.QGraphicsScene):
                     output = source.parent._output
                     #print([e for e in self._edges if e._source_slot == output])
 
-
-
                 print("Create edge from %s to %s" %(source._name, target._name))
                 edge = self.create_edge(target, source)
             else:
@@ -199,6 +197,9 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             # Edge creation mode?
             if self._is_interactive_edge:
                 self._interactive_edge.refresh(event.scenePos())
+            elif self.selectedItems():
+                # Find edges to refresh
+                print("MOVING NODES, Let's refresh egdes")
 
         QtGui.QGraphicsScene.mouseMoveEvent(self, event)
 
@@ -212,6 +213,9 @@ class NodeGraphScene(QtGui.QGraphicsScene):
     #     QtGui.QGraphicsScene.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
+        """
+
+        """
         buttons = event.buttons()
 
         # Edge creation mode?
@@ -233,7 +237,17 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
 
     def mouseDoubleClickEvent(self, event):
+        """
+
+        """
         selected = self.items(event.scenePos())
 
         if len(selected) == 1:
             print("Edit Node %s" % selected[0]._name)
+
+
+    def selectionChanged(self):
+        """
+
+        """
+        print("Selection changed")
