@@ -72,6 +72,16 @@ class Node(QtGui.QGraphicsItem):
         return self._name
 
 
+    @property
+    def edges(self):
+        """Return all hashes of connected edges
+
+        """
+        output = [] if self._output.edge == None else [self._output.edge]
+        inputs = [i.edge for i in self._inputs if i.edge is not None]
+        return set(output + inputs)
+
+
     def _update(self):
         """ Update slots internal properties
 
@@ -298,7 +308,7 @@ class NodeSlot(object):
         self.parent = parent
         self._family = family or self.INPUT
         self._rect = None
-
+        self._edge = None
 
     @property
     def name(self):
@@ -328,7 +338,9 @@ class NodeSlot(object):
     def rect(self, value):
         """ Set property rect
 
-            :param value: class::`QtCore.QRectF`
+        :param value: Rectangle defintion of the slot
+        :type value: class::`QtCore.QRectF`
+
         """
         self._rect = value
 
@@ -340,3 +352,19 @@ class NodeSlot(object):
         """
         return self.parent.mapToScene(self._rect.center())
 
+
+    @property
+    def edge(self):
+        """Return hash id of connedcted edge or None
+
+        """
+        return self._edge
+
+
+    @edge.setter
+    def edge(self, value):
+        """ Set property rect
+
+            :type value: str
+        """
+        self._edge = value

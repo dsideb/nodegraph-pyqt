@@ -32,7 +32,7 @@ class NodeGraphView(QtGui.QGraphicsView):
 
         """
         QtGui.QGraphicsView.__init__(self, scene, parent)
-        self._last_mouse_pos = QtCore.QPointF(0, 0)
+        self._last_mouse_pos = QtCore.QPoint(0, 0)
         self._width = SCENE_WIDTH
         self._height = SCENE_HEIGHT
         self._scale = 1.0
@@ -174,6 +174,7 @@ class NodeGraphView(QtGui.QGraphicsView):
             n = self.scene().create_node("random%d"
                                          % random.randint(1, 10000),
                                          inputs=["in", "in1", "in2"])
+            print(self._last_mouse_pos)
             n.setPos(self.mapToScene(self._last_mouse_pos)
                      - n.boundingRect().center())
 
@@ -217,14 +218,14 @@ class NodeGraphView(QtGui.QGraphicsView):
     #     QtGui.QGraphicsView.mousePressEvent(self, event)
 
 
-    # def mouseMoveEvent(self, event):
-    #     """Re-implement mouseMoveEvent from base class
+    def mouseMoveEvent(self, event):
+        """Re-implement mouseMoveEvent from base class
 
-    #     """
-    #     buttons = event.buttons()
+        """
+        #buttons = event.buttons()
 
-    #     self._last_mouse_pos = event.pos()
-    #     QtGui.QGraphicsView.mouseMoveEvent(self, event)
+        self._last_mouse_pos = event.pos()
+        QtGui.QGraphicsView.mouseMoveEvent(self, event)
 
 
     # def mouseReleaseEvent(self, event):

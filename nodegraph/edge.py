@@ -15,6 +15,8 @@ Edge definition including:
     * InteractiveEdge
 
 """
+import sha
+
 from . import QtCore, QtGui
 
 from constant import DEBUG
@@ -37,12 +39,16 @@ class Edge(QtGui.QGraphicsItem):
 
         :param source: Source slot (should be a output one)
         :type source: :class:`nodegraph.node.NodeSlot`
+
         :param target: Target slot (should be an input one)
         :type target: :cLass:`nodegraph.node.NodeSlot`
+
         :param scene: GraphicsScene that holds the source and target nodes
         :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+
         :param outline: Width of the edge and arrow outline
         :type outline: int
+
         :param arrow: Define type of arrow. By default, no arrow is drawn
         :type arrow: int
 
@@ -57,16 +63,23 @@ class Edge(QtGui.QGraphicsItem):
         self._outline = outline
         self._arrow = arrow
         self._lod = 1
+        self._hash = ("%s.%s >> %s.%s" %
+                      (source_slot.parent._name, source_slot._name,
+                       target_slot.parent._name, target_slot._name))
         self._shape = None
         self._line = None
 
         # Set tooltip
-        tooltip = ("%s(%s)  >> %s(%s)" %
-                   (source_slot.parent._name, source_slot._name,
-                   target_slot.parent._name, target_slot._name))
-        self.setToolTip(tooltip)
+        self.setToolTip(self._hash)
 
+        # Hash the hash
+        self._hash = sha.sha(self._hash).hexdigest()
 
+        # Reference hash in nodes slot
+        source_slot.edge = self._hash
+        target_slot.edge = self._hash
+
+        # Settings
         self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
         self.setZValue(-10)
@@ -75,16 +88,23 @@ class Edge(QtGui.QGraphicsItem):
         self.update()
 
 
+    @property
+    def hash(self):
+        """Return the unique of this edge
+
+        """
+        return self._hash
+
+
     def _update_line(self):
-        # Resolve start and end point from current source and target position
-        #start = self._source_slot.parent.pos()
+        """Resolve start and end point from current source and target position
+
+            :returns: A qt line object
+            :rtype: :class:`QtCore.QLineF`
+
+        """
         start = QtCore.QPointF(0, 0)
-                 # self._source_slot.pos() +
-                 # self._source_slot.boundingRect().center())
         end = self._target_slot.center - self._source_slot.center
-        #end = self._target_slot.parent.pos()
-               # self._target_slot.pos() +
-               # self._target_slot.boundingRect().center())
 
         self._line = QtCore.QLineF(start, end)
 
@@ -101,7 +121,7 @@ class Edge(QtGui.QGraphicsItem):
 
 
     def update(self):
-        """Update edge
+        """Re-implement update of QtGraphicsItem
 
         """
         # Update internal containers

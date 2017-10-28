@@ -34,8 +34,11 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         self._nodegraph_widget = nodegraph_widget
         self._nodes = []
         self._edges = []
+        self._hashed_edges = []
         self._is_interactive_edge = False
+        self._is_refresh_edges = False
         self._interactive_edge = None
+        self._refresh_edges = []
 
         # Redefine palette
         self.setBackgroundBrush(QtGui.QColor(60, 60, 60))
@@ -49,6 +52,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(20, 20, 20))
         self.setPalette(palette)
 
+        #self.selectionChanged.connect(self._onSelectionChanged)
 
     @property
     def nodes(self):
@@ -198,8 +202,11 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             if self._is_interactive_edge:
                 self._interactive_edge.refresh(event.scenePos())
             elif self.selectedItems():
-                # Find edges to refresh
-                print("MOVING NODES, Let's refresh egdes")
+                if not self._is_refresh_edges:
+                    self._is_refresh_edges = True
+                    self._refresh_edges = self._get_refresh_edges()
+                for edge in self._refresh_edges:
+                    edge.refresh()
 
         QtGui.QGraphicsScene.mouseMoveEvent(self, event)
 
@@ -220,7 +227,6 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         # Edge creation mode?
         if self._is_interactive_edge:
-
             slot = None
             node = None
             for item in self.items(event.scenePos()):
@@ -232,6 +238,11 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             connect_to = slot if slot else node
 
             self.stop_interactive_edge(connect_to=connect_to)
+
+        # Edge refresh mode?
+        if self._is_refresh_edges:
+            self._is_refresh_edges = False
+            self._refresh_edges = []
 
         QtGui.QGraphicsScene.mouseReleaseEvent(self, event)
 
@@ -246,8 +257,21 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             print("Edit Node %s" % selected[0]._name)
 
 
-    def selectionChanged(self):
+    def _onSelectionChanged(self):
         """
 
         """
         print("Selection changed")
+
+
+    def _get_refresh_edges(self):
+        """
+
+        """
+        refresh_edges = set()
+
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                print(item.edges)
+
+        return refresh_edges
