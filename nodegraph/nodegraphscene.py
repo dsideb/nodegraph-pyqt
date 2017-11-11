@@ -1,11 +1,12 @@
 #==============================================================================
-# GNU LESSER GENERAL PUBLIC LICENSE
-# Version 3, 29 June 2007
+# Nodegraph-pyqt
 #
-# Everyone is permitted to copy and distribute verbatim copies of this license
+# Everyone is permitted to copy and distribute verbatim copies of this
 # document, but changing it is not allowed.
 #
-# Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+# For any questions, please contact: dsideb@gmail.com
+#
+# GNU LESSER GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 #==============================================================================
 
 """
@@ -16,6 +17,7 @@ from . import QtCore, QtGui
 
 from .node import Node, NodeSlot
 from .edge import Edge, InteractiveEdge
+from .rubberband import RubberBand
 
 
 class NodeGraphScene(QtGui.QGraphicsScene):
@@ -33,12 +35,14 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         self.parent = parent
         self._nodegraph_widget = nodegraph_widget
         self._nodes = []
-        self._edges = []
-        self._hashed_edges = []
+        self._edges_by_hash = {}
         self._is_interactive_edge = False
         self._is_refresh_edges = False
         self._interactive_edge = None
         self._refresh_edges = []
+        self._rubber_band = None
+        self._is_rubber_band = False
+        self._is_add_selection = False
 
         # Redefine palette
         self.setBackgroundBrush(QtGui.QColor(60, 60, 60))
@@ -52,7 +56,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(20, 20, 20))
         self.setPalette(palette)
 
-        #self.selectionChanged.connect(self._onSelectionChanged)
+        self.selectionChanged.connect(self._onSelectionChanged)
 
     @property
     def nodes(self):
@@ -60,14 +64,6 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         """
         return self._nodes
-
-
-    @property
-    def edges(self):
-        """Return all edges
-
-        """
-        return self._edges
 
 
     @property
@@ -92,7 +88,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         """
         edge = Edge(source, target, self, arrow=Edge.ARROW_STANDARD)
-        self._edges.append(edge)
+        self._edges_by_hash[edge.hash] = edge
         return edge
 
 
@@ -119,6 +115,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         """
         if connect_to:
+            eh = self._edges_by_hash # shprtcut
             source = self._interactive_edge._source_slot
 
             found = True
@@ -127,8 +124,8 @@ class NodeGraphScene(QtGui.QGraphicsScene):
                 # Try to find most likely slot
                 if source.family == NodeSlot.OUTPUT:
                     for slot in connect_to._inputs:
-                        l = [e for e in self._edges if e._source_slot == slot
-                             or e._target_slot == slot]
+                        l = [h for h in eh if eh[h]._source_slot == slot
+                             or eh[h]._target_slot == slot]
                         if not l:
                             connect_to = slot
                             found = True
@@ -148,7 +145,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             if (found
                 and source.family != target.family
                 and source.parent != target.parent
-                and not [e for e in self._edges if e._target_slot == source]):
+                and not [h for h in eh if eh[h]._target_slot == source]):
 
 
                 # TO DO: Check new edge isn't creating a loop, i.e that the
@@ -159,7 +156,6 @@ class NodeGraphScene(QtGui.QGraphicsScene):
                         pass
                 else:
                     output = source.parent._output
-                    #print([e for e in self._edges if e._source_slot == output])
 
                 print("Create edge from %s to %s" %(source._name, target._name))
                 edge = self.create_edge(target, source)
@@ -169,6 +165,33 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         self._is_interactive_edge = False
         self._interactive_edge.setVisible(False)
+
+
+    def start_rubber_band(self, init_pos):
+        self._is_rubber_band = True
+        if not self._rubber_band:
+            # Create custom rubber band
+            self._rubber_band = RubberBand(init_pos, scene=self)
+        else:
+            # Re-use existing rubber band
+            self._rubber_band.refresh(mouse_pos=init_pos, init_pos=init_pos)
+            self._rubber_band.setVisible(True)
+
+
+    def stop_rubber_band(self):
+        """Hide the custom rubber band and if it contains node/edges select
+        them
+
+        """
+        self._is_rubber_band = False
+        self._rubber_band.setVisible(False)
+
+        # Select nodes and edges inside the rubber band
+        if self._is_add_selection:
+            self._rubber_band.update_scene_selection(
+                self._rubber_band.ADD_SELECTION)
+        else:
+            self._rubber_band.update_scene_selection()
 
 
     def delete_selected(self):
@@ -195,29 +218,36 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
 
     def mouseMoveEvent(self, event):
+        """Re-implements mouse move event
+
+        """
         buttons = event.buttons()
 
         if buttons == QtCore.Qt.LeftButton:
             # Edge creation mode?
             if self._is_interactive_edge:
                 self._interactive_edge.refresh(event.scenePos())
+            elif self._is_rubber_band:
+                self._rubber_band.refresh(event.scenePos())
             elif self.selectedItems():
                 if not self._is_refresh_edges:
                     self._is_refresh_edges = True
                     self._refresh_edges = self._get_refresh_edges()
-                for edge in self._refresh_edges:
-                    edge.refresh()
+                for ahash in self._refresh_edges:
+                    self._edges_by_hash[ahash].refresh()
 
         QtGui.QGraphicsScene.mouseMoveEvent(self, event)
 
-    # def mousePressEvent(self, event):
 
-    #     # Consumme event if we are currently creating an new edge
-    #     if self._is_interactive_edge:
-    #         event.accept()
-    #         return
+    def mousePressEvent(self, event):
 
-    #     QtGui.QGraphicsScene.mousePressEvent(self, event)
+        if not self._is_interactive_edge:
+
+            if not self.items(event.scenePos()):
+                self.start_rubber_band(event.scenePos())
+
+        QtGui.QGraphicsScene.mousePressEvent(self, event)
+
 
     def mouseReleaseEvent(self, event):
         """
@@ -244,11 +274,15 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             self._is_refresh_edges = False
             self._refresh_edges = []
 
+        # Rubber band mode?
+        if self._is_rubber_band:
+            self.stop_rubber_band()
+
         QtGui.QGraphicsScene.mouseReleaseEvent(self, event)
 
 
     def mouseDoubleClickEvent(self, event):
-        """
+        """Re-implements doube click event
 
         """
         selected = self.items(event.scenePos())
@@ -258,10 +292,11 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
 
     def _onSelectionChanged(self):
-        """
+        """Re-inplements selection changed event
 
         """
-        print("Selection changed")
+        if self._is_refresh_edges:
+            self._refresh_edges = self._get_refresh_edges()
 
 
     def _get_refresh_edges(self):
@@ -272,6 +307,6 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         for item in self.selectedItems():
             if isinstance(item, Node):
-                print(item.edges)
+                refresh_edges |= item.edges
 
-        return refresh_edges
+        return list(refresh_edges)

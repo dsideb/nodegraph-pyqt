@@ -1,11 +1,12 @@
 #==============================================================================
-# GNU LESSER GENERAL PUBLIC LICENSE
-# Version 3, 29 June 2007
+# Nodegraph-pyqt
 #
-# Everyone is permitted to copy and distribute verbatim copies of this license
+# Everyone is permitted to copy and distribute verbatim copies of this
 # document, but changing it is not allowed.
 #
-# Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+# For any questions, please contact: dsideb@gmail.com
+#
+# GNU LESSER GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 #==============================================================================
 
 """
@@ -29,6 +30,15 @@ class NodeGraphView(QtGui.QGraphicsView):
 
     def __init__(self, scene, parent=None):
         """Create an instance of this class
+
+        :param scene: NodeGraphScene reference
+        :type scene: :class:`nodegraph.nodegraphScene.NodeGraphScene`
+
+        :param parent: Parent widget
+        :type parent: mixed
+
+        :returns: An instance of this class
+        :rtype: :class:`nodegraph.nodegraphView.NodeGraphView`
 
         """
         QtGui.QGraphicsView.__init__(self, scene, parent)
@@ -61,7 +71,8 @@ class NodeGraphView(QtGui.QGraphicsView):
         #self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         self.setViewportUpdateMode(
             QtGui.QGraphicsView.BoundingRectViewportUpdate)
-        self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        #self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        self.setDragMode(QtGui.QGraphicsView.NoDrag)
         self.setRubberBandSelectionMode(QtCore.Qt.ContainsItemBoundingRect)
         # self.setSizePolicy(QtGui.QSizePolicy.Expanding,
         #                    QtGui.QSizePolicy.Expanding)
@@ -73,8 +84,11 @@ class NodeGraphView(QtGui.QGraphicsView):
     def fit_view(self, selected=False, padding=50):
         """Set view transform in order to fit all/selected nodes in scene.
 
-        :param selected: (bool) If enabled, fit only selected nodes.
-        :param padding: (int) Add padding around the target rectangle
+        :param selected: If enabled, fit only selected nodes
+        :type selected: bool
+
+        :param padding: Add padding around the target rectangle
+        :type padding: int
 
         """
         # Resolve rectangle we want to zoom to
@@ -117,7 +131,8 @@ class NodeGraphView(QtGui.QGraphicsView):
     def translate_view(self, offset):
         """Translate view by the given offset
 
-        :param offset: (QtCore.QPointF)
+        :param offset: Translate the view
+        :type offset: :class:`QtCore.QPointF`
 
         """
         self.setInteractive(False)
@@ -127,6 +142,12 @@ class NodeGraphView(QtGui.QGraphicsView):
 
     def scale_view(self, scale_factor, limits=True):
         """Scale the view with upper and lower limits if True
+
+        :param scale_factor:
+        :type scale_factor: number
+
+        :param limits: If true, will limits scene scale
+        :type limits: bool
 
         """
         new_scale = self._scale * scale_factor
@@ -151,6 +172,9 @@ class NodeGraphView(QtGui.QGraphicsView):
     def keyPressEvent(self, event):
         """Re-implement keyPressEvent from base class
 
+        :param event: Key event
+        :type event: :class:`QtGui.QKeyEvent`
+
         """
         if event.key() == QtCore.Qt.Key_Alt:
             self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
@@ -158,6 +182,9 @@ class NodeGraphView(QtGui.QGraphicsView):
 
         if event.key() in [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace]:
             self.scene().delete_selected()
+
+        if event.key() == QtCore.Qt.Key_Shift:
+            self.scene()._is_add_selection = True
 
         # TODO: Document these!
         if event.text() in ['-', '_']:
@@ -193,12 +220,20 @@ class NodeGraphView(QtGui.QGraphicsView):
     def keyReleaseEvent(self, event):
         """Re-implement keyReleaseEvent from base class
 
+        :param event: Key event
+        :type event: :class:`QtGui.QKeyEvent`
+
         """
         if event.key() == QtCore.Qt.Key_Alt:
-            self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+            # self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+            self.setDragMode(QtGui.QGraphicsView.NoDrag)
 
         #self.setInteractive(True)
 
+        # Disable special modes
+        self.scene()._is_add_selection = False
+
+        return
 
     # def mousePressEvent(self, event):
 
@@ -221,6 +256,9 @@ class NodeGraphView(QtGui.QGraphicsView):
     def mouseMoveEvent(self, event):
         """Re-implement mouseMoveEvent from base class
 
+        :param event: Mouse event
+        :type event: :class:`QtGui.QMouseEvent`
+
         """
         #buttons = event.buttons()
 
@@ -241,6 +279,9 @@ class NodeGraphView(QtGui.QGraphicsView):
     def wheelEvent(self, event):
         """Re-implement wheelEvent from base class
 
+        :param event: Wheel event
+        :type event: :class:`QtGui.QWheelEvent`
+
         """
         delta = event.delta()
         #p = event.pos()
@@ -253,6 +294,9 @@ class NodeGraphView(QtGui.QGraphicsView):
     def showEvent(self, event):
         """Re-implent showEvent from base class
 
+        :param event: Show event
+        :type event: :class:`QtGui.QShowEvent`
+
         """
         if not self._is_view_initialised:
             self._is_view_initialised = True
@@ -264,7 +308,7 @@ class NodeGraphView(QtGui.QGraphicsView):
         """For a given selection of node return the bounding box
 
         :param selection: (list) list of graphics item
-        :returns: (QtCore.QRectF)
+        :returns: :class:`QtCore.QRectF`
 
         """
         top_left = QtCore.QPointF(self._width, self._height)

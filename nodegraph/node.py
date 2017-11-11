@@ -1,19 +1,19 @@
 #==============================================================================
-# GNU LESSER GENERAL PUBLIC LICENSE
-# Version 3, 29 June 2007
+# Nodegraph-pyqt
 #
-# Everyone is permitted to copy and distribute verbatim copies of this license
+# Everyone is permitted to copy and distribute verbatim copies of this
 # document, but changing it is not allowed.
 #
-# Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+# For any questions, please contact: dsideb@gmail.com
+#
+# GNU LESSER GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 #==============================================================================
 
 """
 Base node definition including
 
-    * Node
-    * NodeSlot
-    * NodeSlotLabel
+    - Node
+    - NodeSlot
 
 """
 from . import QtCore, QtGui
@@ -226,7 +226,10 @@ class Node(QtGui.QGraphicsItem):
 
 
     def hoverMoveEvent(self, event):
-        """
+        """Re-implement Mouse hover move event
+
+        :param event:
+        :type event:
 
         """
         if self._output._rect.contains(event.pos()):
@@ -248,7 +251,6 @@ class Node(QtGui.QGraphicsItem):
         modifiers = event.modifiers()
 
         if buttons == QtCore.Qt.LeftButton:
-
             if self._output._rect.contains(event.pos()):
                 mouse_pos = self.mapToScene(event.pos())
                 self.scene().start_interactive_edge(self._output, mouse_pos)

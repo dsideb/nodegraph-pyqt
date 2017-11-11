@@ -23,7 +23,7 @@ Edges:
     ✔ Create edge interactively @done (17-10-04 09:01)
     ✔ Adjust arrow size (lod bug) and implement dynamic scale @done (17-10-04 09:06)
     ☐ Optimize redraw by caching as much as possible any computation
-    ☐ Optimize redraw by updating line through callbacks
+    ✔ Optimize redraw by updating line through callbacks @done (17-10-28 13:14)
 
 Nodegraph view:
 
@@ -32,12 +32,15 @@ Nodegraph view:
 
   To do:
     ✔ Limit fit all unzoom @done (17-10-05 08:53)
-    ☐ Write a custom select rubber band (default one evaluate all nodes in scenes...)
+    ☐ Write a custom select rubber band (default one evaluate everything on each frame)
     ☐ Add a node creation widget (tab)
 
 Performances issues:
 
   * OpenGL viewport don't accept partial redraw, hence redraw has to happen on the whole viewport regardless of what need to be redrawn.
-  * Using regular viewport allows for partial redraw but then edges are not redrawn well (most likely because of shape/bbox too tight and/or way of being updated)
+  * Using regular viewport allows for partial redraw but then edges are not redrawn well -> prepareGeometryChange() signal wasn't emitted before update...
   * Hierarchy of graphicsItem contained by a Node (NodeSlot, NodeSlotLabel) is forcing QT to multiply draw calls (3 instead of 1). KILLING rubber band selection refresh.
   * Knobs have to be set visible (or not) on every redraw.
+  * Selection rubber band still too slow. Custom one that is only an outline and evaluate selection on mouse
+  * Moving a lot of nodes with edges (+400) shows limit of edges refresh loop. Either find a way to only change the position of the edge (as you would do with a regular QGraphicsItem) or, even better, look into bitmap caching of all npdes and edges that moves uniformly (only redrawing edges connected to non-selected nodes)
+

@@ -37,10 +37,10 @@ class NodeGraphDialog(QtGui.QMainWindow):
                     "random%d" % random.randint(1, 10000),
                     inputs=["in", "add"])
                 node.setPos(j*350, i*350)
-                if prev_node:
-                    edge = self.nodegraph.graph_scene.create_edge(
-                            prev_node._output, node._inputs[0])
-                prev_node = node
+                # if prev_node:
+                #     edge = self.nodegraph.graph_scene.create_edge(
+                #             prev_node._output, node._inputs[0])
+                # prev_node = node
 
 
 class NodeGraphWidget(QtGui.QWidget):

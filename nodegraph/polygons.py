@@ -1,7 +1,12 @@
 #==============================================================================
+# Nodegraph-pyqt
 #
-#  Insert gnu license here
+# Everyone is permitted to copy and distribute verbatim copies of this
+# document, but changing it is not allowed.
 #
+# For any questions, please contact: dsideb@gmail.com
+#
+# GNU LESSER GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 #==============================================================================
 
 """
