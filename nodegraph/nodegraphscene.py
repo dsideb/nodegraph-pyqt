@@ -217,6 +217,16 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         #self._nodes.pop(index)
 
 
+    def mousePressEvent(self, event):
+
+        if not self._is_interactive_edge:
+
+            if not self.items(event.scenePos()):
+                self.start_rubber_band(event.scenePos())
+
+        QtGui.QGraphicsScene.mousePressEvent(self, event)
+
+
     def mouseMoveEvent(self, event):
         """Re-implements mouse move event
 
@@ -224,6 +234,9 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         buttons = event.buttons()
 
         if buttons == QtCore.Qt.LeftButton:
+
+            QtGui.QGraphicsScene.mouseMoveEvent(self, event)
+
             # Edge creation mode?
             if self._is_interactive_edge:
                 self._interactive_edge.refresh(event.scenePos())
@@ -235,18 +248,8 @@ class NodeGraphScene(QtGui.QGraphicsScene):
                     self._refresh_edges = self._get_refresh_edges()
                 for ahash in self._refresh_edges:
                     self._edges_by_hash[ahash].refresh()
-
-        QtGui.QGraphicsScene.mouseMoveEvent(self, event)
-
-
-    def mousePressEvent(self, event):
-
-        if not self._is_interactive_edge:
-
-            if not self.items(event.scenePos()):
-                self.start_rubber_band(event.scenePos())
-
-        QtGui.QGraphicsScene.mousePressEvent(self, event)
+        else:
+            return QtGui.QGraphicsScene.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):

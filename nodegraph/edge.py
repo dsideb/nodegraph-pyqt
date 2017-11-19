@@ -24,6 +24,7 @@ from constant import DEBUG
 from polygons import ARROW_STANDARD, ARROW_SLIM
 from .node import NodeSlot
 
+
 class Edge(QtGui.QGraphicsItem):
 
     """
@@ -77,16 +78,16 @@ class Edge(QtGui.QGraphicsItem):
         self._hash = sha.sha(self._hash).hexdigest()
 
         # Reference hash in nodes slot
-        source_slot.edge = self._hash
-        target_slot.edge = self._hash
+        source_slot.add_edge(self._hash)
+        target_slot.add_edge(self._hash)
 
         # Settings
         self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
         self.setZValue(-10)
 
-        # Update
-        self.update()
+        # Update position, line and path
+        self._update()
 
 
     @property
@@ -100,7 +101,7 @@ class Edge(QtGui.QGraphicsItem):
     def _update_line(self):
         """Resolve start and end point from current source and target position
 
-            :returns: A qt line object
+            :returns: A Qt line object
             :rtype: :class:`QtCore.QLineF`
 
         """
@@ -110,24 +111,13 @@ class Edge(QtGui.QGraphicsItem):
         self._line = QtCore.QLineF(start, end)
 
 
-    def _update(self):
-        """Update internal properties
+    def _update_path(self):
+        """Build path which drives shape and bounding box
+
+            :returns: A Qt path object
+            :rtype: :class:`QtGui.QPainterPath`
 
         """
-        # Update position
-        self.setPos(self._source_slot.center)
-
-        # Update line
-        self._update_line()
-
-
-    def update(self):
-        """Re-implement update of QtGraphicsItem
-
-        """
-        # Update internal containers
-        self._update()
-
         # Update path
         width = 1/self._lod if self._outline*self._lod < 1 else self._outline
         norm = self._line.unitVector().normalVector()
@@ -141,6 +131,35 @@ class Edge(QtGui.QGraphicsItem):
                                 self._line.p2() - norm])
         self._shape.addPolygon(poly)
         self._shape.closeSubpath()
+
+
+    def _update_position(self):
+        """Update position to match center of source slot
+
+        """
+        self.setPos(self._source_slot.center)
+
+
+    def _update(self):
+        """Update internal properties
+
+        """
+        # Update position
+        self._update_position()
+
+        # Update line
+        self._update_line()
+
+        # Update path
+        self._update_path()
+
+
+    def update(self):
+        """Re-implement update of QtGraphicsItem
+
+        """
+        # Update start, end, path and position
+        self._update()
 
         QtGui.QGraphicsLineItem.update(self)
 
@@ -158,7 +177,7 @@ class Edge(QtGui.QGraphicsItem):
 
         """
         # Update node
-        #self.update()
+        #self._update()
 
         # Infer bounding box from shape
         return self._shape.controlPointRect()
@@ -202,7 +221,7 @@ class Edge(QtGui.QGraphicsItem):
 
             vec = self._line.unitVector()
             vec = (self._line.length()/2)*QtCore.QPointF(vec.x2() - vec.x1(),
-                                                          vec.y2() - vec.y1())
+                                                         vec.y2() - vec.y1())
             poly.translate(self._line.x1(), self._line.y1())
             poly.translate(vec.x(), vec.y())
 
@@ -222,6 +241,13 @@ class Edge(QtGui.QGraphicsItem):
         return
 
 
+    def mouseMoveEvent(self, event):
+        """Re-implements mouse move event to avoid unecessaries signals
+
+        """
+        return
+
+
     def refresh(self, source_slot=None, target_slot=None):
         """Update start/end position if provided and force
         redraw
@@ -238,6 +264,15 @@ class Edge(QtGui.QGraphicsItem):
             self._target_slot = target_slot
         self.prepareGeometryChange()
         self.update()
+
+
+    def refresh_position(self):
+        """Updates start position
+
+        """
+        #self.prepareGeometryChange()
+        self._update_position()
+        #self.update()
 
 
 class InteractiveEdge(Edge):
@@ -277,7 +312,7 @@ class InteractiveEdge(Edge):
         self.setZValue(-10)
 
         # Update line
-        self.update()
+        self._update()
 
 
     def _update_line(self):
@@ -293,7 +328,7 @@ class InteractiveEdge(Edge):
         self._line = QtCore.QLineF(start, end)
 
 
-    def _update(self):
+    def _update_position(self):
         """Re-implement function that updates internal container
 
         """
@@ -305,13 +340,9 @@ class InteractiveEdge(Edge):
         # Update position
         self.setPos(position)
 
-        # Update line
-        self._update_line()
-
 
     def refresh(self, mouse_pos, source_slot=None):
-        """Re-implement function that updates start/end position and force
-        redraw
+        """Updates start/end position and force redraw
 
         :param mouse_pos: Scene position of the mouse
         :type mouse_pos: :class:`QtCore.QPointF`

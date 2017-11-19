@@ -201,7 +201,7 @@ class NodeGraphView(QtGui.QGraphicsView):
             n = self.scene().create_node("random%d"
                                          % random.randint(1, 10000),
                                          inputs=["in", "in1", "in2"])
-            print(self._last_mouse_pos)
+            #print(self._last_mouse_pos)
             n.setPos(self.mapToScene(self._last_mouse_pos)
                      - n.boundingRect().center())
 

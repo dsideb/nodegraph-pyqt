@@ -77,9 +77,11 @@ class Node(QtGui.QGraphicsItem):
         """Return all hashes of connected edges
 
         """
-        output = [] if self._output.edge == None else [self._output.edge]
-        inputs = [i.edge for i in self._inputs if i.edge is not None]
-        return set(output + inputs)
+        outputs = self._output.edge
+        inputs = list(set([e for i in self._inputs for e in i.edge]))
+        # print("###################### EDGES #######\noutput:%r\ninputs:%r\n"
+        #       % (outputs, inputs))
+        return set(outputs + inputs)
 
 
     def _update(self):
@@ -310,7 +312,7 @@ class NodeSlot(object):
         self.parent = parent
         self._family = family or self.INPUT
         self._rect = None
-        self._edge = None
+        self._edge = set()
 
     @property
     def name(self):
@@ -359,14 +361,35 @@ class NodeSlot(object):
     def edge(self):
         """Return hash id of connedcted edge or None
 
+        :rtype: list
+
         """
-        return self._edge
+        return list(self._edge)
 
 
     @edge.setter
     def edge(self, value):
-        """ Set property rect
+        """Set property edge (replace)
 
-            :type value: str
+        :type value: str or list
+
         """
-        self._edge = value
+        self._edge = set(value if isinstance(value, list) else [value])
+
+
+    def add_edge(self, value):
+        """Add edge hash(es) to set
+
+        :type value: str or list
+
+        """
+        self._edge |= set(value if isinstance(value, list) else [value])
+
+    def remove_edge(self, value):
+        """Remove edge hash(es) from set
+
+        :type value: str or list
+
+        """
+        self._edge -= set(value if isinstance(value, list) else [value])
+
