@@ -39,10 +39,12 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         self._is_interactive_edge = False
         self._is_refresh_edges = False
         self._interactive_edge = None
-        self._refresh_edges = []
+        self._refresh_edges = {}
         self._rubber_band = None
         self._is_rubber_band = False
-        self._is_add_selection = False
+        self._is_shift_key = False
+        self._is_ctrl_key = False
+        self._is_alt_key = False
 
         # Redefine palette
         self.setBackgroundBrush(QtGui.QColor(60, 60, 60))
@@ -72,6 +74,14 @@ class NodeGraphScene(QtGui.QGraphicsScene):
 
         """
         return self._is_interactive_edge
+
+
+    @property
+    def edges_by_hash(self):
+        """Return a list of edges as hash
+
+        """
+        return self._edges_by_hash
 
 
     def create_node(self, name, inputs=["in"], parent=None):
@@ -157,7 +167,7 @@ class NodeGraphScene(QtGui.QGraphicsScene):
                 else:
                     output = source.parent._output
 
-                print("Create edge from %s to %s" %(source._name, target._name))
+                #print("Create edge from %s to %s" %(source._name, target._name))
                 edge = self.create_edge(target, source)
             else:
                 #TO DO: Send info to status bar
@@ -187,9 +197,12 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         self._rubber_band.setVisible(False)
 
         # Select nodes and edges inside the rubber band
-        if self._is_add_selection:
+        if self._is_shift_key:
             self._rubber_band.update_scene_selection(
                 self._rubber_band.ADD_SELECTION)
+        elif self._is_ctrl_key:
+            self._rubber_band.update_scene_selection(
+                self._rubber_band.MINUS_SELECTION)
         else:
             self._rubber_band.update_scene_selection()
 
@@ -224,6 +237,10 @@ class NodeGraphScene(QtGui.QGraphicsScene):
             if not self.items(event.scenePos()):
                 self.start_rubber_band(event.scenePos())
 
+            if self._is_shift_key or self._is_ctrl_key:
+                event.accept()
+                return
+
         QtGui.QGraphicsScene.mousePressEvent(self, event)
 
 
@@ -246,7 +263,9 @@ class NodeGraphScene(QtGui.QGraphicsScene):
                 if not self._is_refresh_edges:
                     self._is_refresh_edges = True
                     self._refresh_edges = self._get_refresh_edges()
-                for ahash in self._refresh_edges:
+                for ahash in self._refresh_edges["move"]:
+                    self._edges_by_hash[ahash].refresh_position()
+                for ahash in self._refresh_edges["refresh"]:
                     self._edges_by_hash[ahash].refresh()
         else:
             return QtGui.QGraphicsScene.mouseMoveEvent(self, event)
@@ -306,10 +325,23 @@ class NodeGraphScene(QtGui.QGraphicsScene):
         """
 
         """
-        refresh_edges = set()
+        edges = set()
+        nodes = set()
+        edges_to_move = []
+        edges_to_refresh = []
 
         for item in self.selectedItems():
             if isinstance(item, Node):
-                refresh_edges |= item.edges
+                edges |= item.edges
+                nodes.add(item.name)
 
-        return list(refresh_edges)
+        # Distinghish edges where both ends are selected from the rest
+        for edge in edges:
+            if self._edges_by_hash[edge].is_connected_to(nodes):
+                edges_to_move.append(edge)
+            else:
+                edges_to_refresh.append(edge)
+
+        r = {"move":edges_to_move, "refresh":edges_to_refresh}
+        #print("move: %r\nrefresh: %r" % (edges_to_move, edges_to_refresh))
+        return r

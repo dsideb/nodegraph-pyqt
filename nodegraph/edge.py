@@ -92,7 +92,7 @@ class Edge(QtGui.QGraphicsItem):
 
     @property
     def hash(self):
-        """Return the unique of this edge
+        """Return the unique hash of this edge
 
         """
         return self._hash
@@ -254,6 +254,7 @@ class Edge(QtGui.QGraphicsItem):
 
         :param source_slot: Source slot (output or input)
         :type source_slot: :class:`nodegraph.node.NodeSlot`
+
         :param target_slot: Source slot (output or input)
         :type target_slot: :class:`nodegraph.node.NodeSlot`
 
@@ -270,9 +271,22 @@ class Edge(QtGui.QGraphicsItem):
         """Updates start position
 
         """
-        #self.prepareGeometryChange()
         self._update_position()
-        #self.update()
+
+
+    def is_connected_to(self, nodes):
+        """For a given list of nodes, check if edge is connected (bo)
+        node(s)
+
+        :param nodes: node names
+        :type nodes: list
+
+        """
+        if (self._source_slot.parent.name in nodes
+            and self._target_slot.parent.name in nodes):
+            return True
+        else:
+            return False
 
 
 class InteractiveEdge(Edge):

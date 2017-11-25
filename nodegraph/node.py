@@ -16,6 +16,7 @@ Base node definition including
     - NodeSlot
 
 """
+import sha
 from . import QtCore, QtGui
 
 from constant import DEBUG
@@ -45,7 +46,6 @@ class Node(QtGui.QGraphicsItem):
         self._round_slot = None
         self._rect_slot = None
         self._hover_slot = False
-
         self.setFlags(QtGui.QGraphicsItem.ItemIsMovable |
                       QtGui.QGraphicsItem.ItemIsSelectable)
 
@@ -79,8 +79,6 @@ class Node(QtGui.QGraphicsItem):
         """
         outputs = self._output.edge
         inputs = list(set([e for i in self._inputs for e in i.edge]))
-        # print("###################### EDGES #######\noutput:%r\ninputs:%r\n"
-        #       % (outputs, inputs))
         return set(outputs + inputs)
 
 
@@ -290,6 +288,22 @@ class Node(QtGui.QGraphicsItem):
             return
 
         self._hover_slot = slot
+        self.update()
+
+
+    def refresh(self, refresh_edges=True):
+        """Refreh node
+
+        :param refresh_edges: If true, also connected edge
+        :type refresh_edges: bool
+
+
+        """
+        self.prepareGeometryChange()
+        self._update()
+        if refresh_edges and self.edges:
+            for ahash in self.edges:
+                self.scene().edges_by_hash[ahash].refresh()
         self.update()
 
 

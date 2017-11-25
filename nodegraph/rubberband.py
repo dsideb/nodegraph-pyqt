@@ -154,7 +154,7 @@ class RubberBand(QtGui.QGraphicsItem):
 
         :param intersect:
             Specify how items are selected, by default the item bounding box
-            must fully contained
+            must be fully contained
         :type intersect: :class:`QtCore.Qt.ItemSelectionMode`
 
         """
@@ -163,11 +163,16 @@ class RubberBand(QtGui.QGraphicsItem):
 
 
         if operation == self.ADD_SELECTION:
-            #mode = QtCore.Qt.AddToSelection
-            #self.scene().setSelectionArea(self.shape(), intersect, mode)
-            pass
+            current_selection = self.scene().selectedItems()
+            self.scene().setSelectionArea(self.shape(), intersect)
+
+            for item in current_selection:
+                item.setSelected(True)
+
         elif operation == self.MINUS_SELECTION:
-            ## TO DO: Handles remove from selection
-            pass
+            items = self.scene().items(self.shape(), intersect)
+
+            for item in items:
+                item.setSelected(False)
         else:
             self.scene().setSelectionArea(self.shape(), intersect)

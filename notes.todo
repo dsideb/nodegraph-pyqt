@@ -6,9 +6,10 @@ Nodes:
     * Inputs are on left side of the node
     * Output is on the righ side of the node
     * Natural layout flow is left to right
+    * Name of a node is unique
 
   To do:
-    ☐ Optimize redraw by caching as much as possible any computation
+    ✔ Optimize redraw by caching as much as possible any computation @done (17-11-22 09:04)
     ☐ Handle undefined numbers of inputs
     ☐ Create a disabled state
 
@@ -22,7 +23,7 @@ Edges:
   To do:
     ✔ Create edge interactively @done (17-10-04 09:01)
     ✔ Adjust arrow size (lod bug) and implement dynamic scale @done (17-10-04 09:06)
-    ☐ Optimize redraw by caching as much as possible any computation
+    ✔ Optimize redraw by caching as much as possible any computation @done (17-11-22 09:04)
     ✔ Optimize redraw by updating line through callbacks @done (17-10-28 13:14)
 
 Nodegraph view:
@@ -32,7 +33,8 @@ Nodegraph view:
 
   To do:
     ✔ Limit fit all unzoom @done (17-10-05 08:53)
-    ☐ Write a custom select rubber band (default one evaluate everything on each frame)
+    ✔ Write a custom select rubber band (default one evaluate everything on each frame) @done (17-11-22 09:04)
+    ☐ Add/Remove selection withn rubber band
     ☐ Add a node creation widget (tab)
 
 Performances issues:
@@ -42,5 +44,13 @@ Performances issues:
   * Hierarchy of graphicsItem contained by a Node (NodeSlot, NodeSlotLabel) is forcing QT to multiply draw calls (3 instead of 1). KILLING rubber band selection refresh.
   * Knobs have to be set visible (or not) on every redraw.
   * Selection rubber band still too slow. Custom one that is only an outline and evaluate selection on mouse
-  * Moving a lot of nodes with edges (+400) shows limit of edges refresh loop. Either find a way to only change the position of the edge (as you would do with a regular QGraphicsItem) or, even better, look into bitmap caching of all npdes and edges that moves uniformly (only redrawing edges connected to non-selected nodes)
+  * Moving a lot of nodes with edges (+400) shows limit of edges refresh loop. Either find a way to only change the position of the edge (as you would do with a regular QGraphicsItem) or, even better, look into bitmap caching of all nodes and edges that moves uniformly (only redrawing edges connected to non-selected nodes)
 
+
+Performance influenced design:
+
+  * Using partial redraw (no OpenGL viewport) but limiting complexity by forcing to bounding rectangle.
+  * Node Slot is part of the Node QGraphicsItem (i.e. included in Node paint call).
+  * Edges are QGraphicsItem which are refreshed either completely (redefining line and shape) or only by adjusting their position.
+  * Nodes have many level of detail based on zoom level.
+  * Custom rubber band that only refresh selection when releasing mouse button.

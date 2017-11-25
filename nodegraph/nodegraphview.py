@@ -176,15 +176,28 @@ class NodeGraphView(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QKeyEvent`
 
         """
-        if event.key() == QtCore.Qt.Key_Alt:
-            self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
-            #self.setInteractive(False)
+        modifiers = event.modifiers()
+
+        # if event.key() == QtCore.Qt.Key_Alt:
+        #     self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
+        #     #self.setInteractive(False)
 
         if event.key() in [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace]:
             self.scene().delete_selected()
 
-        if event.key() == QtCore.Qt.Key_Shift:
-            self.scene()._is_add_selection = True
+
+        if modifiers & QtCore.Qt.ControlModifier:
+            print("P# CTRL ON")
+            self.scene()._is_ctrl_key = True
+
+        if modifiers & QtCore.Qt.ShiftModifier:
+            print("P# SHIFT ON")
+            self.scene()._is_shift_key = True
+
+        if modifiers & QtCore.Qt.AltModifier:
+            print("P# ALT ON")
+            self.scene()._is_alt_key = True
+            self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
 
         # TODO: Document these!
         if event.text() in ['-', '_']:
@@ -199,20 +212,21 @@ class NodeGraphView(QtGui.QGraphicsView):
         #     self.toggle_enabled()
         if event.text() in ['c']:
             n = self.scene().create_node("random%d"
-                                         % random.randint(1, 10000),
+                                         % random.randint(1, 1000000),
                                          inputs=["in", "in1", "in2"])
-            #print(self._last_mouse_pos)
             n.setPos(self.mapToScene(self._last_mouse_pos)
                      - n.boundingRect().center())
 
         if event.text() in ['o']:
-            for node in self.scene()._nodes:
-                node._height -= 10
-                node._update()
+            for node in self.scene().selectedItems():
+                if isinstance(node, Node):
+                    node._height -= 10
+                    node.refresh()
         if event.text() in ['p']:
-            for node in self.scene()._nodes:
-                node._height += 10
-                node._update()
+            for node in self.scene().selectedItems():
+                if isinstance(node, Node):
+                    node._height += 10
+                    node.refresh()
         if event.text() in ['s']:
             print(self._scale)
 
@@ -224,31 +238,41 @@ class NodeGraphView(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QKeyEvent`
 
         """
-        if event.key() == QtCore.Qt.Key_Alt:
-            # self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        modifiers = event.modifiers()
+
+        # if event.key() == QtCore.Qt.Key_Alt:
+        #     # self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        #     self.setDragMode(QtGui.QGraphicsView.NoDrag)
+
+        if not modifiers & QtCore.Qt.ControlModifier:
+            print("R### CTRL OFF")
+            self.scene()._is_ctrl_key = False
+
+        if not modifiers & QtCore.Qt.ShiftModifier:
+            print("R### SHIFT OFF")
+            self.scene()._is_shift_key = False
+
+        if not modifiers & QtCore.Qt.AltModifier:
+            print("R### ALT OFF")
+            self.scene()._is_alt_key = False
             self.setDragMode(QtGui.QGraphicsView.NoDrag)
-
-        #self.setInteractive(True)
-
-        # Disable special modes
-        self.scene()._is_add_selection = False
 
         return
 
+
     # def mousePressEvent(self, event):
 
-    #     # Consumme event if we are currently creating an new edge
-    #     if self.scene()._is_interactive_edge:
-    #         print("click clickety")
-    #         event.accept()
-    #         return
+    #     # # Consumme event if we are adding to selection
+    #     # if self.scene()._is_shift_key:
+    #     #     event.accept()
+    #     #     return
 
-    #     buttons = event.buttons()
-    #     modifiers = event.modifiers()
+    #     # buttons = event.buttons()
+    #     # modifiers = event.modifiers()
 
-    #     if buttons == QtCore.Qt.LeftButton:
-    #         #print("Button pressed!")
-    #         pass
+    #     # if buttons == QtCore.Qt.LeftButton:
+    #     #     #print("Button pressed!")
+    #     #     pass
 
     #     QtGui.QGraphicsView.mousePressEvent(self, event)
 
@@ -307,8 +331,11 @@ class NodeGraphView(QtGui.QGraphicsView):
     def _get_selection_bbox(self, selection):
         """For a given selection of node return the bounding box
 
-        :param selection: (list) list of graphics item
-        :returns: :class:`QtCore.QRectF`
+        :param selection: List of graphics item
+        :type selection: List
+
+        :returns: A Qt rectangle
+        :rtype: :class:`QtCore.QRectF`
 
         """
         top_left = QtCore.QPointF(self._width, self._height)
