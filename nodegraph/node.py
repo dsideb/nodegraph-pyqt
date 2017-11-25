@@ -10,10 +10,10 @@
 #==============================================================================
 
 """
-Base node definition including
+Base node definition including:
 
-    - Node
-    - NodeSlot
+    * Node
+    * NodeSlot
 
 """
 import sha
@@ -27,7 +27,7 @@ class Node(QtGui.QGraphicsItem):
     Base class for node graphic item
 
     As nuch as possible, everything is drawn in the node paint function for
-    performance reasons.
+    performance reasons
 
     """
 
@@ -83,7 +83,7 @@ class Node(QtGui.QGraphicsItem):
 
 
     def _update(self):
-        """ Update slots internal properties
+        """Update slots internal properties
 
         """
         slot_height = self._slot_radius*2 + self._outline
@@ -296,7 +296,6 @@ class Node(QtGui.QGraphicsItem):
 
         :param refresh_edges: If true, also connected edge
         :type refresh_edges: bool
-
 
         """
         self.prepareGeometryChange()

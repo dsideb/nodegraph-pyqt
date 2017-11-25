@@ -17,7 +17,6 @@ Edge definition including:
 
 """
 import sha
-
 from . import QtCore, QtGui
 
 from constant import DEBUG
@@ -46,7 +45,7 @@ class Edge(QtGui.QGraphicsItem):
         :type target: :cLass:`nodegraph.node.NodeSlot`
 
         :param scene: GraphicsScene that holds the source and target nodes
-        :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+        :type scene: :class:`nodegraph.scene.Scene`
 
         :param outline: Width of the edge and arrow outline
         :type outline: int
@@ -101,8 +100,8 @@ class Edge(QtGui.QGraphicsItem):
     def _update_line(self):
         """Resolve start and end point from current source and target position
 
-            :returns: A Qt line object
-            :rtype: :class:`QtCore.QLineF`
+        :returns: A Qt line object
+        :rtype: :class:`QtCore.QLineF`
 
         """
         start = QtCore.QPointF(0, 0)
@@ -114,8 +113,8 @@ class Edge(QtGui.QGraphicsItem):
     def _update_path(self):
         """Build path which drives shape and bounding box
 
-            :returns: A Qt path object
-            :rtype: :class:`QtGui.QPainterPath`
+        :returns: A Qt path object
+        :rtype: :class:`QtGui.QPainterPath`
 
         """
         # Update path
@@ -300,12 +299,16 @@ class InteractiveEdge(Edge):
 
         :param source: Source slot (should be a output one)
         :type source: :class:`nodegraph.node.NodeSlot`
+
         :param mouse_pos: Current scene position for mouse
         :type mouse: :class:`QtCore.QPointF`
+
         :param scene: GraphicsScene that holds the source and target nodes
-        :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+        :type scene: :class:`nodegraph.scene.Scene`
+
         :param outline: Width of the edge and arrow outline
         :type outline: int
+
         :param arrow: Define type of arrow. By default, no arrow is drawn
         :type arrow: int
 
@@ -360,6 +363,7 @@ class InteractiveEdge(Edge):
 
         :param mouse_pos: Scene position of the mouse
         :type mouse_pos: :class:`QtCore.QPointF`
+
         :param source_slot: Source slot (output or input)
         :type source_slot: :class:`nodegraph.node.NodeSlot`
 

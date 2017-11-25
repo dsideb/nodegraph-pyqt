@@ -9,8 +9,8 @@ try:
 except:
     from PyQt4 import QtGui
 
-from nodegraph.nodegraphscene import NodeGraphScene
-from nodegraph.nodegraphview import NodeGraphView
+from nodegraph.scene import Scene
+from nodegraph.view import View
 
 class NodeGraphDialog(QtGui.QMainWindow):
 
@@ -56,9 +56,9 @@ class NodeGraphWidget(QtGui.QWidget):
         self.name = name
         self.parent = parent
 
-        self.graph_scene = NodeGraphScene(parent=self.parent,
+        self.graph_scene = Scene(parent=self.parent,
                                           nodegraph_widget=self)
-        self.graph_view = NodeGraphView(self.graph_scene, parent=self.parent)
+        self.graph_view = View(self.graph_scene, parent=self.parent)
         self.horizontal_layout = QtGui.QHBoxLayout(self)
         self.horizontal_layout.addWidget(self.graph_view)
 

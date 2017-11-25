@@ -39,7 +39,7 @@ class RubberBand(QtGui.QGraphicsItem):
         :type init_pos: :class:`QtCore.QPointF`
 
         :param scene: GraphicsScene that holds the source and target nodes
-        :type scene: :class:`nodegraph.nodegraphscene.NodeGraphScene`
+        :type scene: :class:`nodegraph.scene.Scene`
 
         :param outline: Width of the edge and arrow outline
         :type outline: int
