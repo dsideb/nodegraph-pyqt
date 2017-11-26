@@ -26,7 +26,7 @@ class Node(QtGui.QGraphicsItem):
     """
     Base class for node graphic item
 
-    As nuch as possible, everything is drawn in the node paint function for
+    As much as possible, everything is drawn in the node paint function for
     performance reasons
 
     """

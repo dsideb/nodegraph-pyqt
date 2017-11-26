@@ -34,8 +34,10 @@ Nodegraph view:
   To do:
     ✔ Limit fit all unzoom @done (17-10-05 08:53)
     ✔ Write a custom select rubber band (default one evaluate everything on each frame) @done (17-11-22 09:04)
-    ☐ Add/Remove selection withn rubber band
+    ✔ Add/Remove selection with rubber band @done (17-11-25 23:23)
+    ☐ Re-implement selection add/remove when clicking on node
     ☐ Add a node creation widget (tab)
+    ☐ Re-implement pan to be always available (midle-click, alt)
 
 Performances issues:
 

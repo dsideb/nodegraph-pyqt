@@ -34,7 +34,7 @@ class NodeGraphDialog(QtGui.QMainWindow):
             prev_node = None
             for j in range(0, 40):
                 node = self.nodegraph.graph_scene.create_node(
-                    "random%d" % random.randint(1, 1000000),
+                    "random%d%d%d" % (i, j, random.randint(1, 1000)),
                     inputs=["in", "add"])
                 node.setPos(j*350, i*350)
                 if prev_node:
