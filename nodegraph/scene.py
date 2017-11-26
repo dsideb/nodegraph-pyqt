@@ -242,6 +242,7 @@ class Scene(QtGui.QGraphicsScene):
         :type event: :class:`QtGui.QMouseEvent`
 
         """
+        print("MOUSE PRESS SCENE!")
         if not self._is_interactive_edge:
 
             if not self.items(event.scenePos()):

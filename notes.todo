@@ -56,3 +56,8 @@ Performance influenced design:
   * Edges are QGraphicsItem which are refreshed either completely (redefining line and shape) or only by adjusting their position.
   * Nodes have many level of detail based on zoom level.
   * Custom rubber band that only refresh selection when releasing mouse button.
+
+  Events:
+
+    * First event goes to View, then Scene, then from highest item in the stack to lowest under the mouse cursor.
+    * If the even is consummed. no propagation

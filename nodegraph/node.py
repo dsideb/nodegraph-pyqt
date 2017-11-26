@@ -228,8 +228,8 @@ class Node(QtGui.QGraphicsItem):
     def hoverMoveEvent(self, event):
         """Re-implement Mouse hover move event
 
-        :param event:
-        :type event:
+        :param event: Hover move event
+        :type event: :class:`QtGui.QMouseEvent`
 
         """
         if self._output._rect.contains(event.pos()):
@@ -244,9 +244,14 @@ class Node(QtGui.QGraphicsItem):
 
 
     def mousePressEvent(self, event):
-        """
+        """Re-implement mousePressEvent from base class
+
+        :param event: Mouse event
+        :type event: :class:`QtGui.QMouseEvent`
 
         """
+        print("MOUSE PRESS NODE!")
+
         buttons = event.buttons()
         modifiers = event.modifiers()
 
@@ -267,7 +272,10 @@ class Node(QtGui.QGraphicsItem):
 
 
     def mouseMoveEvent(self, event):
-        """
+        """Re-implement mouseMoveEvent from base class
+
+        :param event: Mouse event
+        :type event: :class:`QtGui.QMouseEvent`
 
         """
         buttons = event.buttons()

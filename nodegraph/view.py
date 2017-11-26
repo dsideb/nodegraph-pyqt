@@ -259,7 +259,9 @@ class View(QtGui.QGraphicsView):
         return
 
 
-    # def mousePressEvent(self, event):
+    def mousePressEvent(self, event):
+
+        print("MOUSE PRESS VIEW!")
 
     #     # # Consumme event if we are adding to selection
     #     # if self.scene()._is_shift_key:
@@ -273,7 +275,7 @@ class View(QtGui.QGraphicsView):
     #     #     #print("Button pressed!")
     #     #     pass
 
-    #     QtGui.QGraphicsView.mousePressEvent(self, event)
+        QtGui.QGraphicsView.mousePressEvent(self, event)
 
 
     def mouseMoveEvent(self, event):
