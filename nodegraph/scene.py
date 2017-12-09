@@ -18,6 +18,7 @@ from .node import Node, NodeSlot
 from .edge import Edge, InteractiveEdge
 from .rubberband import RubberBand
 
+from .constant import SCENE_WIDTH, SCENE_HEIGHT
 
 class Scene(QtGui.QGraphicsScene):
 
@@ -124,7 +125,7 @@ class Scene(QtGui.QGraphicsScene):
 
         """
         if connect_to:
-            eh = self._edges_by_hash # shprtcut
+            eh = self._edges_by_hash # shortcut
             source = self._interactive_edge._source_slot
 
             found = True
@@ -248,9 +249,9 @@ class Scene(QtGui.QGraphicsScene):
             if not self.items(event.scenePos()):
                 self.start_rubber_band(event.scenePos())
 
-            if self._is_shift_key or self._is_ctrl_key:
-                event.accept()
-                return
+                if self._is_shift_key or self._is_ctrl_key:
+                    event.accept()
+                    return
 
         QtGui.QGraphicsScene.mousePressEvent(self, event)
 
@@ -271,6 +272,7 @@ class Scene(QtGui.QGraphicsScene):
             # Edge creation mode?
             if self._is_interactive_edge:
                 self._interactive_edge.refresh(event.scenePos())
+            # Selection mode?
             elif self._is_rubber_band:
                 self._rubber_band.refresh(event.scenePos())
             elif self.selectedItems():
@@ -293,17 +295,20 @@ class Scene(QtGui.QGraphicsScene):
 
         """
         buttons = event.buttons()
+        connect_to = None
 
         # Edge creation mode?
         if self._is_interactive_edge:
             slot = None
             node = None
             for item in self.items(event.scenePos()):
-                if isinstance(item, NodeSlot):
-                    slot = item
-                    break
+            #     if isinstance(item, NodeSlot):
+            #         slot = item
+            #         break
                 if isinstance(item, Node):
                     node = item
+                    slot = node._hover_slot
+                    break
             connect_to = slot if slot else node
 
             self.stop_interactive_edge(connect_to=connect_to)
@@ -365,3 +370,55 @@ class Scene(QtGui.QGraphicsScene):
         r = {"move":edges_to_move, "refresh":edges_to_refresh}
         #print("move: %r\nrefresh: %r" % (edges_to_move, edges_to_refresh))
         return r
+
+
+    def get_nodes_bbox(self, visible_only=True):
+        """Return bounding box of all nodes in scene
+
+        ..todo :
+            This function could be refactored
+
+        :param visible_only: If true, only evaluate visible NodeSlot
+        :type visible_only: bool
+
+        :returns: A bounding rectangle
+        :rtype: :class:`QtCore.QrectF`
+
+        """
+        if not self._nodes:
+            return QtCore.QRectF()
+
+        min_x = SCENE_WIDTH/2
+        min_y = SCENE_HEIGHT/2
+        max_x = - min_x
+        max_y = - min_y
+        min_x_node = None
+        min_y_node = None
+        max_x_node = None
+        max_y_node = None
+
+        for node in self._nodes:
+            if visible_only and not node.isVisible():
+                continue
+
+            if node.x() < min_x:
+                min_x = node.x()
+                min_x_node = node
+            if node.y() < min_y:
+                min_y = node.y()
+                min_y_node = node
+            if node.x() > max_x:
+                max_x = node.x()
+                max_x_node = node
+            if node.y() > max_y:
+                max_y = node.y()
+                max_y_node = node
+
+        top_left = QtCore.QPointF(
+            min_x + min_x_node.boundingRect().topLeft().x(),
+            min_y + min_y_node.boundingRect().topLeft().y())
+        bottom_right = QtCore.QPointF(
+            max_x + max_x_node.boundingRect().bottomRight().x(),
+            max_y + max_y_node.boundingRect().bottomRight().y())
+        return QtCore.QRectF(top_left, bottom_right)
+

@@ -12,6 +12,7 @@ Nodes:
     ✔ Optimize redraw by caching as much as possible any computation @done (17-11-22 09:04)
     ☐ Handle undefined numbers of inputs
     ☐ Create a disabled state
+    ☐ Handles deletion (with edges gracefully reconnecting)
 
 Edges:
 
@@ -25,6 +26,7 @@ Edges:
     ✔ Adjust arrow size (lod bug) and implement dynamic scale @done (17-10-04 09:06)
     ✔ Optimize redraw by caching as much as possible any computation @done (17-11-22 09:04)
     ✔ Optimize redraw by updating line through callbacks @done (17-10-28 13:14)
+    ☐ Handles deletion
 
 Nodegraph view:
 
@@ -35,9 +37,10 @@ Nodegraph view:
     ✔ Limit fit all unzoom @done (17-10-05 08:53)
     ✔ Write a custom select rubber band (default one evaluate everything on each frame) @done (17-11-22 09:04)
     ✔ Add/Remove selection with rubber band @done (17-11-25 23:23)
-    ☐ Re-implement selection add/remove when clicking on node
+    ✔ Re-implement toggle selection when ctrl+click on node @done (17-12-08 09:15)
     ☐ Add a node creation widget (tab)
-    ☐ Re-implement pan to be always available (midle-click, alt)
+    ✔ Re-implement pan to be always available (midle-click, alt) @done (17-12-08 19:05)
+    ☐ Switch to custom cursor when shift/ctrl on selection
 
 Performances issues:
 
@@ -60,4 +63,4 @@ Performance influenced design:
   Events:
 
     * First event goes to View, then Scene, then from highest item in the stack to lowest under the mouse cursor.
-    * If the even is consummed. no propagation
+    * If not calling ancestor, stop propagation.

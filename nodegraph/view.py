@@ -46,6 +46,8 @@ class View(QtGui.QGraphicsView):
         self._height = SCENE_HEIGHT
         self._scale = 1.0
         self._is_view_initialised = False
+        self._is_pan = False
+        self._is_zoom = False
 
         # Set scene
         self.setScene(scene)
@@ -96,6 +98,7 @@ class View(QtGui.QGraphicsView):
             scene_rect = self._get_selection_bbox(selection)
         else:
             scene_rect = self.scene().itemsBoundingRect()
+            #scene_rect = self.scene().get_nodes_bbox()
 
         # Add a bit of padding
         scene_rect.adjust(-padding, -padding, padding, padding)
@@ -177,13 +180,8 @@ class View(QtGui.QGraphicsView):
         """
         modifiers = event.modifiers()
 
-        # if event.key() == QtCore.Qt.Key_Alt:
-        #     self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
-        #     #self.setInteractive(False)
-
         if event.key() in [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace]:
             self.scene().delete_selected()
-
 
         if modifiers & QtCore.Qt.ControlModifier:
             print("P# CTRL ON")
@@ -193,10 +191,16 @@ class View(QtGui.QGraphicsView):
             print("P# SHIFT ON")
             self.scene()._is_shift_key = True
 
+            if self.scene()._is_rubber_band:
+                self.setCursor(QtCore.Qt.BusyCursor)
+
+
         if modifiers & QtCore.Qt.AltModifier:
             print("P# ALT ON")
             self.scene()._is_alt_key = True
-            self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
+            self._is_pan = True
+            self.setRenderHint(QtGui.QPainter.Antialiasing, False)
+            self.setCursor(QtCore.Qt.OpenHandCursor)
 
         # TODO: Document these!
         if event.text() in ['-', '_']:
@@ -228,6 +232,8 @@ class View(QtGui.QGraphicsView):
                     node.refresh()
         if event.text() in ['s']:
             print(self._scale)
+        else:
+            return QtGui.QGraphicsView.keyPressEvent(self, event)
 
 
     def keyReleaseEvent(self, event):
@@ -238,10 +244,6 @@ class View(QtGui.QGraphicsView):
 
         """
         modifiers = event.modifiers()
-
-        # if event.key() == QtCore.Qt.Key_Alt:
-        #     # self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
-        #     self.setDragMode(QtGui.QGraphicsView.NoDrag)
 
         if not modifiers & QtCore.Qt.ControlModifier:
             print("R### CTRL OFF")
@@ -254,28 +256,31 @@ class View(QtGui.QGraphicsView):
         if not modifiers & QtCore.Qt.AltModifier:
             print("R### ALT OFF")
             self.scene()._is_alt_key = False
-            self.setDragMode(QtGui.QGraphicsView.NoDrag)
-
-        return
+            self._is_pan = False
+            self.setRenderHint(QtGui.QPainter.Antialiasing, True)
+            self.setCursor(QtCore.Qt.ArrowCursor)
+        else:
+            return QtGui.QGraphicsView.keyReleaseEvent(self, event)
 
 
     def mousePressEvent(self, event):
+        """Re-implement mousePressEvent from base class
 
-        print("MOUSE PRESS VIEW!")
+        :param event: Mouse event
+        :type event: :class:`QtGui.QMouseEvent`
 
-    #     # # Consumme event if we are adding to selection
-    #     # if self.scene()._is_shift_key:
-    #     #     event.accept()
-    #     #     return
+        """
+        #print("MOUSE PRESS VIEW!")
+        self._last_mouse_pos = event.pos()
 
-    #     # buttons = event.buttons()
-    #     # modifiers = event.modifiers()
-
-    #     # if buttons == QtCore.Qt.LeftButton:
-    #     #     #print("Button pressed!")
-    #     #     pass
-
-        QtGui.QGraphicsView.mousePressEvent(self, event)
+        if (event.button() == QtCore.Qt.LeftButton
+            and self.scene()._is_alt_key):
+            self._is_pan = True
+            self.setCursor(QtCore.Qt.OpenHandCursor)
+        elif event.button() == QtCore.Qt.MidButton:
+            self._is_pan = True
+        else:
+            return QtGui.QGraphicsView.mousePressEvent(self, event)
 
 
     def mouseMoveEvent(self, event):
@@ -285,20 +290,33 @@ class View(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QMouseEvent`
 
         """
-        #buttons = event.buttons()
+        if self._is_pan:
+            delta = (self.mapToScene(self._last_mouse_pos)
+                     - self.mapToScene(event.pos()))
+            self.setCursor(QtCore.Qt.ClosedHandCursor)
+            self.translate_view(delta)
+            self._last_mouse_pos = event.pos()
+        else:
+            self._last_mouse_pos = event.pos()
+            QtGui.QGraphicsView.mouseMoveEvent(self, event)
 
-        self._last_mouse_pos = event.pos()
-        QtGui.QGraphicsView.mouseMoveEvent(self, event)
 
+    def mouseReleaseEvent(self, event):
+        """Re-implement mouseReleaseEvent from base class
 
-    # def mouseReleaseEvent(self, event):
-    #     #print("View Button released!")
+        :param event: Mouse event
+        :type event: :class:`QtGui.QMouseEvent`
 
-    #     # Edge creation mode?
-    #     if self.scene()._is_interactive_edge:
-    #         self.scene().stop_interactive_edge()
+        """
+        #print("MOUSE RELEASE")
 
-    #     QtGui.QGraphicsView.mouseReleaseEvent(self, event)
+        if self._is_pan:
+            self.setCursor(QtCore.Qt.OpenHandCursor)
+            self._is_pan = False
+        else:
+            self.setCursor(QtCore.Qt.ArrowCursor)
+
+        QtGui.QGraphicsView.mouseReleaseEvent(self, event)
 
 
     def wheelEvent(self, event):
@@ -308,6 +326,7 @@ class View(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QWheelEvent`
 
         """
+        print("WHEELLLLL")
         delta = event.delta()
         #p = event.pos()
 

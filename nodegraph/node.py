@@ -111,6 +111,16 @@ class Node(QtGui.QGraphicsItem):
                 self._height + self._outline)
 
 
+    def _update_hover_slot(self, slot):
+        if slot == self._hover_slot:
+            # No change
+            return
+
+        self._hover_slot = slot
+
+        self.update()
+
+
     def boundingRect(self):
         """Return a QRect that represents the bounding box of the node.
         Here that sould be the bounding box of the primary shape of the node.
@@ -162,27 +172,40 @@ class Node(QtGui.QGraphicsItem):
 
         # Draw slots
         if lod >= 0.15:
+            # Should be driven by slot type
+            hover_color = QtGui.QColor(90, 90, 140)
+            hover_normal = self.scene().palette().text()
             self.setAcceptHoverEvents(True)
-            painter.setBrush(self.scene().palette().text())
+            painter.setBrush(hover_normal)
             painter.setPen(QtGui.QPen(fill_brush, self._outline))
 
-            if self._hover_slot:
-                # Hover color should be driven by slot type
-                painter.setBrush(self.scene().palette().highlightedText())
 
             if lod >= 0.35:
                 # Draw output (Ellipse)
+                if self._hover_slot == self._output:
+                    # Hover color should be driven by slot type
+                    painter.setBrush(hover_color)
                 painter.drawEllipse(self._output._rect)
 
                 # Draw input (Ellipse)
                 for aninput in self._inputs:
+                    if self._hover_slot == aninput:
+                        painter.setBrush(hover_color)
+                    else:
+                        painter.setBrush(hover_normal)
                     painter.drawEllipse(aninput.rect)
             else:
                 # Draw output (Rectangle)
+                if self._hover_slot == self._output:
+                    painter.setBrush(hover_color)
                 painter.drawRect(self._output._rect)
 
                 # Drae input (Rectangle)
                 for aninput in self._inputs:
+                    if self._hover_slot == aninput:
+                        painter.setBrush(hover_color)
+                    else:
+                        painter.setBrush(hover_normal)
                     painter.drawRect(aninput.rect)
         else:
             self.setAcceptHoverEvents(False)
@@ -232,8 +255,12 @@ class Node(QtGui.QGraphicsItem):
         :type event: :class:`QtGui.QMouseEvent`
 
         """
+        #print("NODE %s hover move" % self._name)
+        his = [i for i in self._inputs if i._rect.contains(event.pos())]
         if self._output._rect.contains(event.pos()):
-            self._update_hover_slot(True)
+            self._update_hover_slot(self._output)
+        elif his:
+            self._update_hover_slot(his[0])
         else:
             self._update_hover_slot(False)
 
@@ -241,6 +268,19 @@ class Node(QtGui.QGraphicsItem):
         QtGui.QGraphicsItem.hoverMoveEvent(self, event)
 
         return
+
+
+    def hoverLeaveEvent(self, event):
+        """Re-implement Mouse hover move event
+
+        :param event: Hover move event
+        :type event: :class:`QtGui.QMouseEvent`
+
+        """
+        self._update_hover_slot(False)
+
+        # Call normal behavior
+        QtGui.QGraphicsItem.hoverLeaveEvent(self, event)
 
 
     def mousePressEvent(self, event):
@@ -283,20 +323,13 @@ class Node(QtGui.QGraphicsItem):
 
         if buttons == QtCore.Qt.LeftButton:
             if self.scene().is_interactive_edge:
-                # Edge creation mode, consumming event
+                # Edge creation mode
+
+                print("Node Name: %s, pos: %s" % (self._name, event.pos()))
                 event.accept()
                 return
 
         QtGui.QGraphicsItem.mouseMoveEvent(self, event)
-
-
-    def _update_hover_slot(self, slot):
-        if slot == self._hover_slot:
-            # No change
-            return
-
-        self._hover_slot = slot
-        self.update()
 
 
     def refresh(self, refresh_edges=True):
