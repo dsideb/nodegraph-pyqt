@@ -16,6 +16,8 @@ default one with a large numbers of items
 """
 
 from . import QtCore, QtGui
+from .node import Node
+from .edge import Edge
 
 from constant import DEBUG
 
@@ -30,6 +32,7 @@ class RubberBand(QtGui.QGraphicsItem):
     REPLACE_SELECTION = 1
     ADD_SELECTION = 2
     MINUS_SELECTION = 4
+    TOGGLE_SELECTION = 8
 
 
     def __init__(self, init_pos, scene, outline=2):
@@ -174,5 +177,14 @@ class RubberBand(QtGui.QGraphicsItem):
 
             for item in items:
                 item.setSelected(False)
+
+        elif operation == self.TOGGLE_SELECTION:
+            items = self.scene().items(self.shape(), intersect)
+
+            for item in items:
+                if item.isSelected():
+                    item.setSelected(False)
+                else:
+                    item.setSelected(True)
         else:
             self.scene().setSelectionArea(self.shape(), intersect)

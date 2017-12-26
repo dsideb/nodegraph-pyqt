@@ -203,7 +203,10 @@ class Scene(QtGui.QGraphicsScene):
         self._rubber_band.setVisible(False)
 
         # Select nodes and edges inside the rubber band
-        if self._is_shift_key:
+        if self._is_shift_key and self._is_ctrl_key:
+            self._rubber_band.update_scene_selection(
+                self._rubber_band.TOGGLE_SELECTION)
+        elif self._is_shift_key:
             self._rubber_band.update_scene_selection(
                 self._rubber_band.ADD_SELECTION)
         elif self._is_ctrl_key:
@@ -251,7 +254,7 @@ class Scene(QtGui.QGraphicsScene):
 
                 if self._is_shift_key or self._is_ctrl_key:
                     event.accept()
-                    return
+                return
 
         QtGui.QGraphicsScene.mousePressEvent(self, event)
 

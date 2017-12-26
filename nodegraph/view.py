@@ -12,6 +12,7 @@
 """Node graph scene manager based on QGraphicsScene
 
 """
+import os
 import random
 
 from . import QtCore, QtGui, QtOpenGL
@@ -19,6 +20,7 @@ from . import QtCore, QtGui, QtOpenGL
 from .node import Node
 from .constant import SCENE_WIDTH, SCENE_HEIGHT
 
+RESOURCES = os.path.dirname(os.path.realpath(__file__))
 
 class View(QtGui.QGraphicsView):
 
@@ -26,6 +28,7 @@ class View(QtGui.QGraphicsView):
     Provides custom implementation of QGraphicsView
 
     """
+
 
     def __init__(self, scene, parent=None):
         """Create an instance of this class
@@ -48,6 +51,17 @@ class View(QtGui.QGraphicsView):
         self._is_view_initialised = False
         self._is_pan = False
         self._is_zoom = False
+
+        # Custom mouse cursors
+        img = QtGui.QPixmap(
+            os.path.join(RESOURCES, "bitmap", "arrow_plus.png"))
+        self.arrow_plus_cursor = QtGui.QCursor(img, hotX=0, hotY=0)
+        img = QtGui.QPixmap(
+            os.path.join(RESOURCES, "bitmap", "arrow_minus.png"))
+        self.arrow_minus_cursor = QtGui.QCursor(img, hotX=0, hotY=0)
+        img = QtGui.QPixmap(
+            os.path.join(RESOURCES, "bitmap", "arrow_cross.png"))
+        self.arrow_cross_cursor = QtGui.QCursor(img, hotX=0, hotY=0)
 
         # Set scene
         self.setScene(scene)
@@ -180,27 +194,33 @@ class View(QtGui.QGraphicsView):
         """
         modifiers = event.modifiers()
 
-        if event.key() in [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace]:
-            self.scene().delete_selected()
-
-        if modifiers & QtCore.Qt.ControlModifier:
-            print("P# CTRL ON")
-            self.scene()._is_ctrl_key = True
-
-        if modifiers & QtCore.Qt.ShiftModifier:
-            print("P# SHIFT ON")
-            self.scene()._is_shift_key = True
-
-            if self.scene()._is_rubber_band:
-                self.setCursor(QtCore.Qt.BusyCursor)
-
-
         if modifiers & QtCore.Qt.AltModifier:
             print("P# ALT ON")
             self.scene()._is_alt_key = True
             self._is_pan = True
             self.setRenderHint(QtGui.QPainter.Antialiasing, False)
             self.setCursor(QtCore.Qt.OpenHandCursor)
+
+        if modifiers & QtCore.Qt.ControlModifier:
+            print("P# CTRL ON")
+            self.scene()._is_ctrl_key = True
+
+            if not self._is_pan:
+                self.setCursor(self.arrow_minus_cursor)
+
+        if modifiers & QtCore.Qt.ShiftModifier:
+            print("P# SHIFT ON")
+            self.scene()._is_shift_key = True
+
+            if not self._is_pan:
+                if not self.scene()._is_ctrl_key:
+                    self.setCursor(self.arrow_plus_cursor)
+                else:
+                    self.setCursor(self.arrow_cross_cursor)
+
+
+        if event.key() in [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace]:
+            self.scene().delete_selected()
 
         # TODO: Document these!
         if event.text() in ['-', '_']:
@@ -212,7 +232,9 @@ class View(QtGui.QGraphicsView):
         if event.text() in ["a"]:
             self.fit_view(selected=False)
         # if event.text() in ['t']:
-        #     self.toggle_enabled()
+        #     items = self.scene().selectedItems()
+        #     for item in items:
+        #         item.setSelected(False)
         if event.text() in ['c']:
             n = self.scene().create_node("random%d"
                                          % random.randint(1, 1000000),
@@ -259,8 +281,15 @@ class View(QtGui.QGraphicsView):
             self._is_pan = False
             self.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.setCursor(QtCore.Qt.ArrowCursor)
-        else:
-            return QtGui.QGraphicsView.keyReleaseEvent(self, event)
+
+        if self.scene()._is_shift_key:
+            self.setCursor(self.arrow_plus_cursor)
+        elif self.scene()._is_ctrl_key:
+            self.setCursor(self.arrow_minus_cursor)
+        elif not self._is_pan:
+           self.setCursor(QtCore.Qt.ArrowCursor)
+
+        return QtGui.QGraphicsView.keyReleaseEvent(self, event)
 
 
     def mousePressEvent(self, event):
@@ -313,6 +342,12 @@ class View(QtGui.QGraphicsView):
         if self._is_pan:
             self.setCursor(QtCore.Qt.OpenHandCursor)
             self._is_pan = False
+        elif self.scene()._is_shift_key and self.scene()._is_ctrl_key:
+            self.setCursor(self.arrow_cross_cursor)
+        elif self.scene()._is_shift_key:
+            self.setCursor(self.arrow_plus_cursor)
+        elif self.scene()._is_ctrl_key:
+            self.setCursor(self.arrow_minus_cursor)
         else:
             self.setCursor(QtCore.Qt.ArrowCursor)
 
@@ -326,7 +361,7 @@ class View(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QWheelEvent`
 
         """
-        print("WHEELLLLL")
+        #print("WHEELLLLL")
         delta = event.delta()
         #p = event.pos()
 
@@ -347,6 +382,42 @@ class View(QtGui.QGraphicsView):
             self.fit_view()
         QtGui.QGraphicsView.showEvent(self, event)
 
+
+    def focusOutEvent(self, event):
+        """Re-implement focusOutEvent from the base class
+
+        :param event: Focus event
+        :type event: :class:`QtGui.QFocusEvent`
+
+        """
+        print("Mouse out!")
+        # Stop dragging mode if needed
+        self.scene()._is_alt_key = False
+        self._is_pan = False
+        self.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        self.setCursor(QtCore.Qt.ArrowCursor)
+
+
+        QtGui.QGraphicsView.focusOutEvent(self, event)
+
+    # def focusInEvent(self, event):
+    #     """Re-implement focusInEvent from the base class
+
+    #     :param event: Focus event
+    #     :type event: :class:`QtGui.QFocusEvent`
+
+    #     """
+    #     print("Mouse in!")
+    #     modifiers = QtGui.QApplication.keyboardModifiers()
+
+    #     if modifiers & QtCore.Qt.AltModifier:
+    #         print("P# ALT ON")
+    #         self.scene()._is_alt_key = True
+    #         self._is_pan = True
+    #         self.setRenderHint(QtGui.QPainter.Antialiasing, False)
+    #         self.setCursor(QtCore.Qt.OpenHandCursor)
+
+    #     QtGui.QGraphicsView.focusOutEvent(self, event)
 
     def _get_selection_bbox(self, selection):
         """For a given selection of node return the bounding box
