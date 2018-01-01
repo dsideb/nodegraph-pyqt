@@ -12,4 +12,5 @@ The main purpose of this repository is to provide a full-featured dag GUI with a
 # Reference
 
 Here a short list of similar project you may be interested by:
-* cb109/qtnodes
+* [cb109/qtnodes](https://github.com/cb109/qtnodes)
+* [LeGoffLoic/Nodz](https://github.com/LeGoffLoic/Nodz)
