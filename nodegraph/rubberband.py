@@ -1,4 +1,4 @@
-#==============================================================================
+# =============================================================================
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
@@ -7,7 +7,7 @@
 # For any questions, please contact: dsideb@gmail.com
 #
 # GNU LESSER GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
-#==============================================================================
+# =============================================================================
 
 """
 Custom rubber band selection aimed at being more efficient than the
@@ -16,10 +16,10 @@ default one with a large numbers of items
 """
 
 from . import QtCore, QtGui
-from .node import Node
-from .edge import Edge
+# from .node import Node
+# from .edge import Edge
 
-from constant import DEBUG
+# from constant import DEBUG
 
 
 class RubberBand(QtGui.QGraphicsItem):
@@ -33,7 +33,6 @@ class RubberBand(QtGui.QGraphicsItem):
     ADD_SELECTION = 2
     MINUS_SELECTION = 4
     TOGGLE_SELECTION = 8
-
 
     def __init__(self, init_pos, scene, outline=2):
         """Creates an instance of this class
@@ -65,7 +64,6 @@ class RubberBand(QtGui.QGraphicsItem):
         # Update
         self._update()
 
-
     def _update(self):
         """Update internal properties
 
@@ -81,7 +79,6 @@ class RubberBand(QtGui.QGraphicsItem):
         self._shape.addPolygon(poly)
         self._shape.closeSubpath()
 
-
     def update(self):
         """Re-implement update of QtGraphicsItem
 
@@ -91,7 +88,6 @@ class RubberBand(QtGui.QGraphicsItem):
 
         QtGui.QGraphicsLineItem.update(self)
 
-
     def shape(self):
         """Re-implement shape method
         Return a QPainterPath that represents the bounding shape
@@ -99,14 +95,12 @@ class RubberBand(QtGui.QGraphicsItem):
         """
         return self._shape
 
-
     def boundingRect(self):
         """Re-implement bounding box method
 
         """
         # Infer bounding box from shape
         return self._shape.controlPointRect()
-
 
     def paint(self, painter, option, widget=None):
         """Re-implement paint method
@@ -123,7 +117,7 @@ class RubberBand(QtGui.QGraphicsItem):
 
         # Draw Shape
         painter.setPen(pen)
-        #painter.drawPath(self._shape)
+        # painter.drawPath(self._shape)
 
         color = palette.highlight().color()
         color.setAlphaF(0.2)
@@ -163,7 +157,6 @@ class RubberBand(QtGui.QGraphicsItem):
         """
         operation = operation or self.REPLACE_SELECTION
         intersect = intersect or QtCore.Qt.ContainsItemBoundingRect
-
 
         if operation == self.ADD_SELECTION:
             current_selection = self.scene().selectedItems()

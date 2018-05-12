@@ -1,4 +1,4 @@
-#==============================================================================
+# =============================================================================
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
@@ -7,7 +7,7 @@
 # For any questions, please contact: dsideb@gmail.com
 #
 # GNU LESSER GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
-#==============================================================================
+# =============================================================================
 
 """Node graph scene manager based on QGraphicsScene
 
@@ -19,6 +19,7 @@ from .edge import Edge, InteractiveEdge
 from .rubberband import RubberBand
 
 from .constant import SCENE_WIDTH, SCENE_HEIGHT
+
 
 class Scene(QtGui.QGraphicsScene):
 
@@ -67,7 +68,6 @@ class Scene(QtGui.QGraphicsScene):
         """
         return self._nodes
 
-
     @property
     def is_interactive_edge(self):
         """Return status of interactive edge mode
@@ -75,14 +75,12 @@ class Scene(QtGui.QGraphicsScene):
         """
         return self._is_interactive_edge
 
-
     @property
     def edges_by_hash(self):
         """Return a list of edges as hash
 
         """
         return self._edges_by_hash
-
 
     def create_node(self, name, inputs=["in"], parent=None):
         """Create a new node
@@ -92,7 +90,6 @@ class Scene(QtGui.QGraphicsScene):
         self._nodes.append(node)
         return node
 
-
     def create_edge(self, source, target):
         """Create a new edge
 
@@ -101,7 +98,6 @@ class Scene(QtGui.QGraphicsScene):
         self._edges_by_hash[edge.hash] = edge
         return edge
 
-
     def start_interactive_edge(self, source_slot, mouse_pos):
         """Create an edge between source slot and mouse position
 
@@ -109,15 +105,15 @@ class Scene(QtGui.QGraphicsScene):
         self._is_interactive_edge = True
         if not self._interactive_edge:
             # Create interactive edge
-            self._interactive_edge = InteractiveEdge(source_slot,
-                    mouse_pos,
-                    scene=self,
-                    arrow=Edge.ARROW_STANDARD)
+            self._interactive_edge = InteractiveEdge(
+                source_slot,
+                mouse_pos,
+                scene=self,
+                arrow=Edge.ARROW_STANDARD)
         else:
             # Re-use existing interactive edge
             self._interactive_edge.refresh(mouse_pos, source_slot)
             self._interactive_edge.setVisible(True)
-
 
     def stop_interactive_edge(self, connect_to=None):
         """Hide the interactive and create an edge between the source slot
@@ -125,7 +121,7 @@ class Scene(QtGui.QGraphicsScene):
 
         """
         if connect_to:
-            eh = self._edges_by_hash # shortcut
+            eh = self._edges_by_hash  # shortcut
             source = self._interactive_edge._source_slot
 
             found = True
@@ -134,9 +130,9 @@ class Scene(QtGui.QGraphicsScene):
                 # Try to find most likely slot
                 if source.family == NodeSlot.OUTPUT:
                     for slot in connect_to._inputs:
-                        l = [h for h in eh if eh[h]._source_slot == slot
-                             or eh[h]._target_slot == slot]
-                        if not l:
+                        li = [h for h in eh if eh[h]._source_slot == slot or
+                              eh[h]._target_slot == slot]
+                        if not li:
                             connect_to = slot
                             found = True
                             break
@@ -152,11 +148,10 @@ class Scene(QtGui.QGraphicsScene):
                 target = self._interactive_edge._source_slot
 
             # Validate the connection
-            if (found
-                and source.family != target.family
-                and source.parent != target.parent
-                and not [h for h in eh if eh[h]._target_slot == source]):
-
+            if (found and
+                    source.family != target.family and
+                    source.parent != target.parent and
+                    not [h for h in eh if eh[h]._target_slot == source]):
 
                 # TO DO: Check new edge isn't creating a loop, i.e that the
                 # source node opposite slot(s) are(n't) connected to the target
@@ -167,15 +162,15 @@ class Scene(QtGui.QGraphicsScene):
                 else:
                     output = source.parent._output
 
-                #print("Create edge from %s to %s" %(source._name, target._name))
+                # print("Create edge from %s to %s" %
+                #       (source._name, target._name))
                 edge = self.create_edge(target, source)
             else:
-                #TO DO: Send info to status bar
+                # TO DO: Send info to status bar
                 pass
 
         self._is_interactive_edge = False
         self._interactive_edge.setVisible(False)
-
 
     def start_rubber_band(self, init_pos):
         """Create/Enable custom rubber band
@@ -192,7 +187,6 @@ class Scene(QtGui.QGraphicsScene):
             # Re-use existing rubber band
             self._rubber_band.refresh(mouse_pos=init_pos, init_pos=init_pos)
             self._rubber_band.setVisible(True)
-
 
     def stop_rubber_band(self):
         """Hide the custom rubber band and if it contains node/edges select
@@ -215,7 +209,6 @@ class Scene(QtGui.QGraphicsScene):
         else:
             self._rubber_band.update_scene_selection()
 
-
     def delete_selected(self):
         """Delete selected nodes and edges
 
@@ -234,10 +227,9 @@ class Scene(QtGui.QGraphicsScene):
             # TODO: Collect all edges for deletion or reconnection
             pass
         # Delete node(s)
-        #self.removeItem(node)
-        #index = self._nodes.index(node)
-        #self._nodes.pop(index)
-
+        # self.removeItem(node)
+        # index = self._nodes.index(node)
+        # self._nodes.pop(index)
 
     def mousePressEvent(self, event):
         """Re-implements mouse press event
@@ -257,7 +249,6 @@ class Scene(QtGui.QGraphicsScene):
                 return
 
         QtGui.QGraphicsScene.mousePressEvent(self, event)
-
 
     def mouseMoveEvent(self, event):
         """Re-implements mouse move event
@@ -289,7 +280,6 @@ class Scene(QtGui.QGraphicsScene):
         else:
             return QtGui.QGraphicsScene.mouseMoveEvent(self, event)
 
-
     def mouseReleaseEvent(self, event):
         """Re-implements mouse release event
 
@@ -297,7 +287,7 @@ class Scene(QtGui.QGraphicsScene):
         :type event: :class:`QtGui.QMouseEvent`
 
         """
-        buttons = event.buttons()
+        # buttons = event.buttons()
         connect_to = None
 
         # Edge creation mode?
@@ -305,9 +295,6 @@ class Scene(QtGui.QGraphicsScene):
             slot = None
             node = None
             for item in self.items(event.scenePos()):
-            #     if isinstance(item, NodeSlot):
-            #         slot = item
-            #         break
                 if isinstance(item, Node):
                     node = item
                     slot = node._hover_slot
@@ -327,7 +314,6 @@ class Scene(QtGui.QGraphicsScene):
 
         QtGui.QGraphicsScene.mouseReleaseEvent(self, event)
 
-
     def mouseDoubleClickEvent(self, event):
         """Re-implements doube click event
 
@@ -340,14 +326,12 @@ class Scene(QtGui.QGraphicsScene):
         if len(selected) == 1:
             print("Edit Node %s" % selected[0]._name)
 
-
     def _onSelectionChanged(self):
         """Re-inplements selection changed event
 
         """
         if self._is_refresh_edges:
             self._refresh_edges = self._get_refresh_edges()
-
 
     def _get_refresh_edges(self):
         """Return all edges of selected items
@@ -370,10 +354,9 @@ class Scene(QtGui.QGraphicsScene):
             else:
                 edges_to_refresh.append(edge)
 
-        r = {"move":edges_to_move, "refresh":edges_to_refresh}
-        #print("move: %r\nrefresh: %r" % (edges_to_move, edges_to_refresh))
+        r = {"move": edges_to_move, "refresh": edges_to_refresh}
+        # print("move: %r\nrefresh: %r" % (edges_to_move, edges_to_refresh))
         return r
-
 
     def get_nodes_bbox(self, visible_only=True):
         """Return bounding box of all nodes in scene
@@ -391,8 +374,8 @@ class Scene(QtGui.QGraphicsScene):
         if not self._nodes:
             return QtCore.QRectF()
 
-        min_x = SCENE_WIDTH/2
-        min_y = SCENE_HEIGHT/2
+        min_x = SCENE_WIDTH / 2
+        min_y = SCENE_HEIGHT / 2
         max_x = - min_x
         max_y = - min_y
         min_x_node = None
@@ -424,4 +407,3 @@ class Scene(QtGui.QGraphicsScene):
             max_x + max_x_node.boundingRect().bottomRight().x(),
             max_y + max_y_node.boundingRect().bottomRight().y())
         return QtCore.QRectF(top_left, bottom_right)
-

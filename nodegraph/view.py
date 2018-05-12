@@ -1,4 +1,4 @@
-#==============================================================================
+# =============================================================================
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
@@ -7,7 +7,7 @@
 # For any questions, please contact: dsideb@gmail.com
 #
 # GNU LESSER GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
-#==============================================================================
+# =============================================================================
 
 """Node graph scene manager based on QGraphicsScene
 
@@ -15,12 +15,14 @@
 import os
 import random
 
-from . import QtCore, QtGui, QtOpenGL
+from . import QtCore, QtGui
+# from . import QtOpenGL
 
 from .node import Node
 from .constant import SCENE_WIDTH, SCENE_HEIGHT
 
 RESOURCES = os.path.dirname(os.path.realpath(__file__))
+
 
 class View(QtGui.QGraphicsView):
 
@@ -28,7 +30,6 @@ class View(QtGui.QGraphicsView):
     Provides custom implementation of QGraphicsView
 
     """
-
 
     def __init__(self, scene, parent=None):
         """Create an instance of this class
@@ -68,7 +69,7 @@ class View(QtGui.QGraphicsView):
 
         # Set scene rectangle
         self.scene().setSceneRect(
-            QtCore.QRectF(-self._width/2, -self._height/2,
+            QtCore.QRectF(-self._width / 2, -self._height / 2,
                           self._width, self._height))
 
         # Enable OpenGL
@@ -82,11 +83,11 @@ class View(QtGui.QGraphicsView):
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
         self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
         self.setRenderHint(QtGui.QPainter.Antialiasing)
-        #self.setRenderHint(QtGui.QPainter.TextAntialiasing)
-        #self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
+        # self.setRenderHint(QtGui.QPainter.TextAntialiasing)
+        # self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         self.setViewportUpdateMode(
             QtGui.QGraphicsView.BoundingRectViewportUpdate)
-        #self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        # self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.setDragMode(QtGui.QGraphicsView.NoDrag)
         self.setRubberBandSelectionMode(QtCore.Qt.ContainsItemBoundingRect)
         # self.setSizePolicy(QtGui.QSizePolicy.Expanding,
@@ -94,7 +95,6 @@ class View(QtGui.QGraphicsView):
 
         # Init scene
         self.setInteractive(True)
-
 
     def fit_view(self, selected=False, padding=50):
         """Set view transform in order to fit all/selected nodes in scene.
@@ -112,17 +112,17 @@ class View(QtGui.QGraphicsView):
             scene_rect = self._get_selection_bbox(selection)
         else:
             scene_rect = self.scene().itemsBoundingRect()
-            #scene_rect = self.scene().get_nodes_bbox()
+            # scene_rect = self.scene().get_nodes_bbox()
 
         # Add a bit of padding
         scene_rect.adjust(-padding, -padding, padding, padding)
 
         # Compare ratio, find resulting scale
-        view_ratio = float(self.size().width())/float(self.size().height())
-        fit_ratio = scene_rect.width()/scene_rect.height()
-        x_ratio = scene_rect.width()/float(self.size().width())
-        y_ratio = scene_rect.height()/float(self.size().height())
-        new_scale = 1/max(x_ratio, y_ratio)
+        view_ratio = float(self.size().width()) / float(self.size().height())
+        fit_ratio = scene_rect.width() / scene_rect.height()
+        x_ratio = scene_rect.width() / float(self.size().width())
+        y_ratio = scene_rect.height() / float(self.size().height())
+        new_scale = 1 / max(x_ratio, y_ratio)
 
         if new_scale >= 1:
             # Maximum zoom limit reached.
@@ -143,7 +143,6 @@ class View(QtGui.QGraphicsView):
             self._scale = new_scale
             self.fitInView(scene_rect, QtCore.Qt.KeepAspectRatio)
 
-
     def translate_view(self, offset):
         """Translate view by the given offset
 
@@ -154,7 +153,6 @@ class View(QtGui.QGraphicsView):
         self.setInteractive(False)
         self.translate(offset.x(), offset.y())
         self.setInteractive(True)
-
 
     def scale_view(self, scale_factor, limits=True):
         """Scale the view with upper and lower limits if True
@@ -183,7 +181,6 @@ class View(QtGui.QGraphicsView):
         self.scale(scale_factor, scale_factor)
         self.setInteractive(True)
         return True
-
 
     def keyPressEvent(self, event):
         """Re-implement keyPressEvent from base class
@@ -218,7 +215,6 @@ class View(QtGui.QGraphicsView):
                 else:
                     self.setCursor(self.arrow_cross_cursor)
 
-
         if event.key() in [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace]:
             self.scene().delete_selected()
 
@@ -239,8 +235,8 @@ class View(QtGui.QGraphicsView):
             n = self.scene().create_node("random%d"
                                          % random.randint(1, 1000000),
                                          inputs=["in", "in1", "in2"])
-            n.setPos(self.mapToScene(self._last_mouse_pos)
-                     - n.boundingRect().center())
+            n.setPos(self.mapToScene(self._last_mouse_pos) -
+                     n.boundingRect().center())
 
         if event.text() in ['o']:
             for node in self.scene().selectedItems():
@@ -256,7 +252,6 @@ class View(QtGui.QGraphicsView):
             print(self._scale)
         else:
             return QtGui.QGraphicsView.keyPressEvent(self, event)
-
 
     def keyReleaseEvent(self, event):
         """Re-implement keyReleaseEvent from base class
@@ -287,10 +282,9 @@ class View(QtGui.QGraphicsView):
         elif self.scene()._is_ctrl_key:
             self.setCursor(self.arrow_minus_cursor)
         elif not self._is_pan:
-           self.setCursor(QtCore.Qt.ArrowCursor)
+            self.setCursor(QtCore.Qt.ArrowCursor)
 
         return QtGui.QGraphicsView.keyReleaseEvent(self, event)
-
 
     def mousePressEvent(self, event):
         """Re-implement mousePressEvent from base class
@@ -299,18 +293,17 @@ class View(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QMouseEvent`
 
         """
-        #print("MOUSE PRESS VIEW!")
+        # print("MOUSE PRESS VIEW!")
         self._last_mouse_pos = event.pos()
 
-        if (event.button() == QtCore.Qt.LeftButton
-            and self.scene()._is_alt_key):
+        if (event.button() == QtCore.Qt.LeftButton and
+                self.scene()._is_alt_key):
             self._is_pan = True
             self.setCursor(QtCore.Qt.OpenHandCursor)
         elif event.button() == QtCore.Qt.MidButton:
             self._is_pan = True
         else:
             return QtGui.QGraphicsView.mousePressEvent(self, event)
-
 
     def mouseMoveEvent(self, event):
         """Re-implement mouseMoveEvent from base class
@@ -320,15 +313,14 @@ class View(QtGui.QGraphicsView):
 
         """
         if self._is_pan:
-            delta = (self.mapToScene(self._last_mouse_pos)
-                     - self.mapToScene(event.pos()))
+            delta = (self.mapToScene(self._last_mouse_pos) -
+                     self.mapToScene(event.pos()))
             self.setCursor(QtCore.Qt.ClosedHandCursor)
             self.translate_view(delta)
             self._last_mouse_pos = event.pos()
         else:
             self._last_mouse_pos = event.pos()
             QtGui.QGraphicsView.mouseMoveEvent(self, event)
-
 
     def mouseReleaseEvent(self, event):
         """Re-implement mouseReleaseEvent from base class
@@ -337,7 +329,7 @@ class View(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QMouseEvent`
 
         """
-        #print("MOUSE RELEASE")
+        # print("MOUSE RELEASE")
 
         if self._is_pan:
             self.setCursor(QtCore.Qt.OpenHandCursor)
@@ -353,7 +345,6 @@ class View(QtGui.QGraphicsView):
 
         QtGui.QGraphicsView.mouseReleaseEvent(self, event)
 
-
     def wheelEvent(self, event):
         """Re-implement wheelEvent from base class
 
@@ -361,14 +352,13 @@ class View(QtGui.QGraphicsView):
         :type event: :class:`QtGui.QWheelEvent`
 
         """
-        #print("WHEELLLLL")
+        # print("WHEELLLLL")
         delta = event.delta()
-        #p = event.pos()
+        # p = event.pos()
 
         scale_factor = pow(1.1, delta / 240.0)
         self.scale_view(scale_factor)
         event.accept()
-
 
     def showEvent(self, event):
         """Re-implent showEvent from base class
@@ -381,7 +371,6 @@ class View(QtGui.QGraphicsView):
             self._is_view_initialised = True
             self.fit_view()
         QtGui.QGraphicsView.showEvent(self, event)
-
 
     def focusOutEvent(self, event):
         """Re-implement focusOutEvent from the base class
@@ -396,7 +385,6 @@ class View(QtGui.QGraphicsView):
         self._is_pan = False
         self.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.setCursor(QtCore.Qt.ArrowCursor)
-
 
         QtGui.QGraphicsView.focusOutEvent(self, event)
 

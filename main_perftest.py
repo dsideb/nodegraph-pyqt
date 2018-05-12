@@ -13,6 +13,7 @@ except:
 from nodegraph.scene import Scene
 from nodegraph.view import View
 
+
 class NodeGraphDialog(QtGui.QMainWindow):
 
     """
@@ -36,10 +37,10 @@ class NodeGraphDialog(QtGui.QMainWindow):
                 node = self.nodegraph.graph_scene.create_node(
                     "random%d%d%d" % (i, j, random.randint(1, 1000)),
                     inputs=["in", "add"])
-                node.setPos(j*350, i*350)
+                node.setPos(j * 350, i * 350)
                 if prev_node:
                     edge = self.nodegraph.graph_scene.create_edge(
-                            prev_node._output, node._inputs[0])
+                        prev_node._output, node._inputs[0])
                 prev_node = node
 
 
@@ -56,7 +57,7 @@ class NodeGraphWidget(QtGui.QWidget):
         self.parent = parent
 
         self.graph_scene = Scene(parent=self.parent,
-                                          nodegraph_widget=self)
+                                 nodegraph_widget=self)
         self.graph_view = View(self.graph_scene, parent=self.parent)
         self.horizontal_layout = QtGui.QHBoxLayout(self)
         self.horizontal_layout.addWidget(self.graph_view)
