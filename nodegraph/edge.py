@@ -2,7 +2,7 @@
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
-# document, but changing it is not allowed.
+# document, but changing it is not allowed without permissions.
 #
 # For any questions, please contact: dsideb@gmail.com
 #
@@ -17,14 +17,14 @@ Edge definition including:
 
 """
 import sha
-from . import QtCore, QtGui
+from Qt import QtCore, QtGui, QtWidgets
 
 from constant import DEBUG
 from polygons import ARROW_STANDARD, ARROW_SLIM
 from .node import NodeSlot
 
 
-class Edge(QtGui.QGraphicsItem):
+class Edge(QtWidgets.QGraphicsItem):
 
     """
     Node Edge base class that displays a directed line between two slots
@@ -57,7 +57,7 @@ class Edge(QtGui.QGraphicsItem):
         :rtype: :class:`nodegraph.edge.Edge`
 
         """
-        QtGui.QGraphicsItem.__init__(self, parent=None, scene=scene)
+        QtWidgets.QGraphicsItem.__init__(self, parent=None, scene=scene)
 
         self._source_slot = source_slot
         self._target_slot = target_slot
@@ -81,7 +81,7 @@ class Edge(QtGui.QGraphicsItem):
         target_slot.add_edge(self._hash)
 
         # Settings
-        self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
+        self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
         self.setZValue(-10)
 
@@ -155,7 +155,7 @@ class Edge(QtGui.QGraphicsItem):
         # Update start, end, path and position
         self._update()
 
-        QtGui.QGraphicsLineItem.update(self)
+        QtWidgets.QGraphicsLineItem.update(self)
 
     def shape(self):
         """Re-implement shape method
@@ -185,9 +185,9 @@ class Edge(QtGui.QGraphicsItem):
         palette = (self.scene().palette() if self.scene()
                    else option.palette)
         brush = palette.text()
-        if option.state & QtGui.QStyle.State_Selected:
+        if option.state & QtWidgets.QStyle.State_Selected:
             brush = palette.highlight()
-        elif option.state & QtGui.QStyle.State_MouseOver:
+        elif option.state & QtWidgets.QStyle.State_MouseOver:
             color = brush.color().darker(250)
             brush.setColor(color)
 
@@ -202,7 +202,7 @@ class Edge(QtGui.QGraphicsItem):
         # Draw arrow if needed
         if self._arrow and self._lod > 0.15:
             # Construct arrow
-            matrix = QtGui.QMatrix()
+            matrix = QtGui.QTransform()
             matrix.rotate(-self._line.angle())
             matrix.scale(width, width)
 
@@ -305,7 +305,7 @@ class InteractiveEdge(Edge):
         :rtype: :class:`nodegraph.edge.InteractiveEdge`
 
         """
-        QtGui.QGraphicsItem.__init__(self, parent=None, scene=scene)
+        QtWidgets.QGraphicsItem.__init__(self, parent=None, scene=scene)
 
         self._source_slot = source_slot
         self._mouse_pos = mouse_pos

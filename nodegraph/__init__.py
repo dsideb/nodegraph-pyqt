@@ -1,5 +1,7 @@
-# Resolve python Qt flavor
-try:
-    from PySide import QtGui, QtCore, QtOpenGL
-except:
-    from PyQt4 import QtGui, QtCore, QtOpenGL
+import sys as _sys
+import os as _os
+
+# Add third party as top level modules
+_sys.path.append(_os.path.join(
+    _os.path.dirname(_os.path.dirname(_os.path.realpath(__file__))),
+    "thirdparty"))

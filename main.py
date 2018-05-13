@@ -4,16 +4,13 @@
 import sys
 
 # import networkx
-try:
-    from PySide import QtGui
-except:
-    from PyQt4 import QtGui
+from thirdparty.Qt import QtWidgets
 
 from nodegraph.scene import Scene
 from nodegraph.view import View
 
 
-class NodeGraphDialog(QtGui.QMainWindow):
+class NodeGraphDialog(QtWidgets.QMainWindow):
 
     """
     Handles top level dialog of Node grap
@@ -21,7 +18,7 @@ class NodeGraphDialog(QtGui.QMainWindow):
     """
 
     def __init__(self, parent=None):
-        QtGui.QMainWindow.__init__(self, parent)
+        QtWidgets.QMainWindow.__init__(self, parent)
         self.parent = parent or self
 
         self.nodegraph = NodeGraphWidget("main", parent=self.parent)
@@ -29,7 +26,7 @@ class NodeGraphDialog(QtGui.QMainWindow):
         self.resize(800, 600)
         self.setWindowTitle("Node graph -")
 
-        center = self.nodegraph.graph_view.sceneRect().center()
+        # center = self.nodegraph.graph_view.sceneRect().center()
         cam = self.nodegraph.graph_scene.create_node("camera")
         cam.setPos(-200, -150)
         model = self.nodegraph.graph_scene.create_node(
@@ -47,7 +44,7 @@ class NodeGraphDialog(QtGui.QMainWindow):
             model._inputs[1])
 
 
-class NodeGraphWidget(QtGui.QWidget):
+class NodeGraphWidget(QtWidgets.QWidget):
 
     """
     Handles node graph view
@@ -55,19 +52,19 @@ class NodeGraphWidget(QtGui.QWidget):
     """
 
     def __init__(self, name, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.name = name
         self.parent = parent
 
         self.graph_scene = Scene(parent=self.parent,
                                  nodegraph_widget=self)
         self.graph_view = View(self.graph_scene, parent=self.parent)
-        self.horizontal_layout = QtGui.QHBoxLayout(self)
+        self.horizontal_layout = QtWidgets.QHBoxLayout(self)
         self.horizontal_layout.addWidget(self.graph_view)
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication([])
+    app = QtWidgets.QApplication([])
     dialog = NodeGraphDialog()
     dialog.show()
 

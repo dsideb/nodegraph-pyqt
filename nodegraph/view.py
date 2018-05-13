@@ -2,7 +2,7 @@
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
-# document, but changing it is not allowed.
+# document, but changing it is not allowed without permissions.
 #
 # For any questions, please contact: dsideb@gmail.com
 #
@@ -15,7 +15,7 @@
 import os
 import random
 
-from . import QtCore, QtGui
+from Qt import QtCore, QtGui, QtWidgets
 # from . import QtOpenGL
 
 from .node import Node
@@ -24,7 +24,7 @@ from .constant import SCENE_WIDTH, SCENE_HEIGHT
 RESOURCES = os.path.dirname(os.path.realpath(__file__))
 
 
-class View(QtGui.QGraphicsView):
+class View(QtWidgets.QGraphicsView):
 
     """
     Provides custom implementation of QGraphicsView
@@ -44,7 +44,7 @@ class View(QtGui.QGraphicsView):
         :rtype: :class:`nodegraph.nodegraphView.View`
 
         """
-        QtGui.QGraphicsView.__init__(self, scene, parent)
+        QtWidgets.QGraphicsView.__init__(self, scene, parent)
         self._last_mouse_pos = QtCore.QPoint(0, 0)
         self._width = SCENE_WIDTH
         self._height = SCENE_HEIGHT
@@ -80,18 +80,18 @@ class View(QtGui.QGraphicsView):
         # Settings
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
-        self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorViewCenter)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setRenderHint(QtGui.QPainter.Antialiasing)
         # self.setRenderHint(QtGui.QPainter.TextAntialiasing)
         # self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         self.setViewportUpdateMode(
-            QtGui.QGraphicsView.BoundingRectViewportUpdate)
-        # self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
-        self.setDragMode(QtGui.QGraphicsView.NoDrag)
+            QtWidgets.QGraphicsView.BoundingRectViewportUpdate)
+        # self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         self.setRubberBandSelectionMode(QtCore.Qt.ContainsItemBoundingRect)
-        # self.setSizePolicy(QtGui.QSizePolicy.Expanding,
-        #                    QtGui.QSizePolicy.Expanding)
+        # self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+        #                    QtWidgets.QSizePolicy.Expanding)
 
         # Init scene
         self.setInteractive(True)
@@ -186,7 +186,7 @@ class View(QtGui.QGraphicsView):
         """Re-implement keyPressEvent from base class
 
         :param event: Key event
-        :type event: :class:`QtGui.QKeyEvent`
+        :type event: :class:`QtWidgets.QKeyEvent`
 
         """
         modifiers = event.modifiers()
@@ -251,13 +251,13 @@ class View(QtGui.QGraphicsView):
         if event.text() in ['s']:
             print(self._scale)
         else:
-            return QtGui.QGraphicsView.keyPressEvent(self, event)
+            return QtWidgets.QGraphicsView.keyPressEvent(self, event)
 
     def keyReleaseEvent(self, event):
         """Re-implement keyReleaseEvent from base class
 
         :param event: Key event
-        :type event: :class:`QtGui.QKeyEvent`
+        :type event: :class:`QtWidgets.QKeyEvent`
 
         """
         modifiers = event.modifiers()
@@ -284,13 +284,13 @@ class View(QtGui.QGraphicsView):
         elif not self._is_pan:
             self.setCursor(QtCore.Qt.ArrowCursor)
 
-        return QtGui.QGraphicsView.keyReleaseEvent(self, event)
+        return QtWidgets.QGraphicsView.keyReleaseEvent(self, event)
 
     def mousePressEvent(self, event):
         """Re-implement mousePressEvent from base class
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         # print("MOUSE PRESS VIEW!")
@@ -303,13 +303,13 @@ class View(QtGui.QGraphicsView):
         elif event.button() == QtCore.Qt.MidButton:
             self._is_pan = True
         else:
-            return QtGui.QGraphicsView.mousePressEvent(self, event)
+            return QtWidgets.QGraphicsView.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
         """Re-implement mouseMoveEvent from base class
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         if self._is_pan:
@@ -320,13 +320,13 @@ class View(QtGui.QGraphicsView):
             self._last_mouse_pos = event.pos()
         else:
             self._last_mouse_pos = event.pos()
-            QtGui.QGraphicsView.mouseMoveEvent(self, event)
+            QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
 
     def mouseReleaseEvent(self, event):
         """Re-implement mouseReleaseEvent from base class
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         # print("MOUSE RELEASE")
@@ -343,13 +343,13 @@ class View(QtGui.QGraphicsView):
         else:
             self.setCursor(QtCore.Qt.ArrowCursor)
 
-        QtGui.QGraphicsView.mouseReleaseEvent(self, event)
+        QtWidgets.QGraphicsView.mouseReleaseEvent(self, event)
 
     def wheelEvent(self, event):
         """Re-implement wheelEvent from base class
 
         :param event: Wheel event
-        :type event: :class:`QtGui.QWheelEvent`
+        :type event: :class:`QtWidgets.QWheelEvent`
 
         """
         # print("WHEELLLLL")
@@ -364,19 +364,19 @@ class View(QtGui.QGraphicsView):
         """Re-implent showEvent from base class
 
         :param event: Show event
-        :type event: :class:`QtGui.QShowEvent`
+        :type event: :class:`QtWidgets.QShowEvent`
 
         """
         if not self._is_view_initialised:
             self._is_view_initialised = True
             self.fit_view()
-        QtGui.QGraphicsView.showEvent(self, event)
+        QtWidgets.QGraphicsView.showEvent(self, event)
 
     def focusOutEvent(self, event):
         """Re-implement focusOutEvent from the base class
 
         :param event: Focus event
-        :type event: :class:`QtGui.QFocusEvent`
+        :type event: :class:`QtWidgets.QFocusEvent`
 
         """
         print("Mouse out!")
@@ -386,17 +386,17 @@ class View(QtGui.QGraphicsView):
         self.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.setCursor(QtCore.Qt.ArrowCursor)
 
-        QtGui.QGraphicsView.focusOutEvent(self, event)
+        QtWidgets.QGraphicsView.focusOutEvent(self, event)
 
     # def focusInEvent(self, event):
     #     """Re-implement focusInEvent from the base class
 
     #     :param event: Focus event
-    #     :type event: :class:`QtGui.QFocusEvent`
+    #     :type event: :class:`QtWidgets.QFocusEvent`
 
     #     """
     #     print("Mouse in!")
-    #     modifiers = QtGui.QApplication.keyboardModifiers()
+    #     modifiers = QtWidgets.QApplication.keyboardModifiers()
 
     #     if modifiers & QtCore.Qt.AltModifier:
     #         print("P# ALT ON")
@@ -405,7 +405,7 @@ class View(QtGui.QGraphicsView):
     #         self.setRenderHint(QtGui.QPainter.Antialiasing, False)
     #         self.setCursor(QtCore.Qt.OpenHandCursor)
 
-    #     QtGui.QGraphicsView.focusOutEvent(self, event)
+    #     QtWidgets.QGraphicsView.focusOutEvent(self, event)
 
     def _get_selection_bbox(self, selection):
         """For a given selection of node return the bounding box

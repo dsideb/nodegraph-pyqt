@@ -2,7 +2,7 @@
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
-# document, but changing it is not allowed.
+# document, but changing it is not allowed without permissions.
 #
 # For any questions, please contact: dsideb@gmail.com
 #
@@ -17,12 +17,12 @@ Base node definition including:
 
 """
 # import sha
-from . import QtCore, QtGui
+from Qt import QtCore, QtGui, QtWidgets
 
 from constant import DEBUG
 
 
-class Node(QtGui.QGraphicsItem):
+class Node(QtWidgets.QGraphicsItem):
 
     """
     Base class for node graphic item
@@ -36,7 +36,7 @@ class Node(QtGui.QGraphicsItem):
         """Create an instance of this class
 
         """
-        QtGui.QGraphicsItem.__init__(self, parent=parent, scene=scene)
+        QtWidgets.QGraphicsItem.__init__(self, parent=parent, scene=scene)
         self._name = name
         self._width = 160
         self._height = 130
@@ -47,8 +47,8 @@ class Node(QtGui.QGraphicsItem):
         self._round_slot = None
         self._rect_slot = None
         self._hover_slot = False
-        self.setFlags(QtGui.QGraphicsItem.ItemIsMovable |
-                      QtGui.QGraphicsItem.ItemIsSelectable)
+        self.setFlags(QtWidgets.QGraphicsItem.ItemIsMovable |
+                      QtWidgets.QGraphicsItem.ItemIsSelectable)
 
         self.setAcceptHoverEvents(False)
 
@@ -136,7 +136,7 @@ class Node(QtGui.QGraphicsItem):
         # Resolve fill, text and outlines brush
         fill_brush = self.scene().palette().button()
         text_brush = self.scene().palette().text()
-        if option.state & QtGui.QStyle.State_Selected:
+        if option.state & QtWidgets.QStyle.State_Selected:
             fill_brush = self.scene().palette().highlight()
             text_brush = self.scene().palette().highlightedText()
 
@@ -248,7 +248,7 @@ class Node(QtGui.QGraphicsItem):
         """Re-implement Mouse hover move event
 
         :param event: Hover move event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         # print("NODE %s hover move" % self._name)
@@ -261,7 +261,7 @@ class Node(QtGui.QGraphicsItem):
             self._update_hover_slot(False)
 
         # Call normal behavior
-        QtGui.QGraphicsItem.hoverMoveEvent(self, event)
+        QtWidgets.QGraphicsItem.hoverMoveEvent(self, event)
 
         return
 
@@ -269,19 +269,19 @@ class Node(QtGui.QGraphicsItem):
         """Re-implement Mouse hover move event
 
         :param event: Hover move event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         self._update_hover_slot(False)
 
         # Call normal behavior
-        QtGui.QGraphicsItem.hoverLeaveEvent(self, event)
+        QtWidgets.QGraphicsItem.hoverLeaveEvent(self, event)
 
     def mousePressEvent(self, event):
         """Re-implement mousePressEvent from base class
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         print("MOUSE PRESS NODE!")
@@ -302,13 +302,13 @@ class Node(QtGui.QGraphicsItem):
                     event.accept()
                     return
 
-        QtGui.QGraphicsItem.mousePressEvent(self, event)
+        QtWidgets.QGraphicsItem.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
         """Re-implement mouseMoveEvent from base class
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         buttons = event.buttons()
@@ -322,7 +322,7 @@ class Node(QtGui.QGraphicsItem):
                 event.accept()
                 return
 
-        QtGui.QGraphicsItem.mouseMoveEvent(self, event)
+        QtWidgets.QGraphicsItem.mouseMoveEvent(self, event)
 
     def refresh(self, refresh_edges=True):
         """Refreh node
@@ -353,7 +353,7 @@ class NodeSlot(object):
         """Instance this class
 
         """
-        # QtGui.QGraphicsItem.__init__(self, parent=parent, scene=scene)
+        # QtWidgets.QGraphicsItem.__init__(self, parent=parent, scene=scene)
         self._name = name
         self.parent = parent
         self._family = family or self.INPUT

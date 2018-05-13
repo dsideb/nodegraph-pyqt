@@ -51,7 +51,7 @@ Performances issues:
   * Using regular viewport allows for partial redraw but then edges are not redrawn well -> prepareGeometryChange() signal wasn't emitted before update...
   * Hierarchy of graphicsItem contained by a Node (NodeSlot, NodeSlotLabel) is forcing QT to multiply draw calls (3 instead of 1). KILLING rubber band selection refresh.
   * Knobs have to be set visible (or not) on every redraw.
-  * Selection rubber band still too slow. Custom one that is only an outline and evaluate selection on mouse
+  * Selection rubber band still too slow. Custom one that is only an outline and evaluate selection on mouse button release?
   * Moving a lot of nodes with edges (+400) shows limit of edges refresh loop. Either find a way to only change the position of the edge (as you would do with a regular QGraphicsItem) or, even better, look into bitmap caching of all nodes and edges that moves uniformly (only redrawing edges connected to non-selected nodes)
 
 
@@ -67,3 +67,20 @@ Performance influenced design:
 
     * First event goes to View, then Scene, then from highest item in the stack to lowest under the mouse cursor.
     * If not calling ancestor, stop propagation.
+
+  TESTS:
+
+   * Check zoom limits
+   * Check left click selection (node, edge)
+   * Check Lasso selection (nodes, edges)
+   * Check add/remove from selection shortcut, with single left click selection then lasso selection.
+   * Check selected nodes can be me moved
+   * Check creation of a node
+   * Check Creation of a edge (from a input to an output and opposite)
+   * Check Pan shortcut (alone, then combined with other actions)
+   * Check Creation of an edge (auto-drop to destination node)
+   * Check Deletion of Nodes (no connections)
+   * Check Deletion of Edges.
+   * Check Deletions of a connected node (automatic re-connection)
+   * Check saving a graph
+   * check loading a graph

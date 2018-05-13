@@ -2,7 +2,7 @@
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
-# document, but changing it is not allowed.
+# document, but changing it is not allowed without permissions.
 #
 # For any questions, please contact: dsideb@gmail.com
 #

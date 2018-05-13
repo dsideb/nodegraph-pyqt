@@ -2,7 +2,7 @@
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
-# document, but changing it is not allowed.
+# document, but changing it is not allowed without permissions.
 #
 # For any questions, please contact: dsideb@gmail.com
 #
@@ -15,14 +15,14 @@ default one with a large numbers of items
 
 """
 
-from . import QtCore, QtGui
+from Qt import QtCore, QtGui, QtWidgets
 # from .node import Node
 # from .edge import Edge
 
 # from constant import DEBUG
 
 
-class RubberBand(QtGui.QGraphicsItem):
+class RubberBand(QtWidgets.QGraphicsItem):
 
     """
     Draw outline of a rectangle (as a shape)
@@ -50,7 +50,7 @@ class RubberBand(QtGui.QGraphicsItem):
         :rtype: :class:`nodegraph.rubberband.RubberBand`
 
         """
-        QtGui.QGraphicsItem.__init__(self, parent=None, scene=scene)
+        QtWidgets.QGraphicsItem.__init__(self, parent=None, scene=scene)
 
         self._source_pos = init_pos
         self._mouse_pos = init_pos
@@ -86,7 +86,7 @@ class RubberBand(QtGui.QGraphicsItem):
         # Update internal containers
         self._update()
 
-        QtGui.QGraphicsLineItem.update(self)
+        QtWidgets.QGraphicsLineItem.update(self)
 
     def shape(self):
         """Re-implement shape method

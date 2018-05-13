@@ -2,7 +2,7 @@
 # Nodegraph-pyqt
 #
 # Everyone is permitted to copy and distribute verbatim copies of this
-# document, but changing it is not allowed.
+# document, but changing it is not allowed without permissions.
 #
 # For any questions, please contact: dsideb@gmail.com
 #
@@ -12,7 +12,7 @@
 """Node graph scene manager based on QGraphicsScene
 
 """
-from . import QtCore, QtGui
+from Qt import QtCore, QtGui, QtWidgets
 
 from .node import Node, NodeSlot
 from .edge import Edge, InteractiveEdge
@@ -21,7 +21,7 @@ from .rubberband import RubberBand
 from .constant import SCENE_WIDTH, SCENE_HEIGHT
 
 
-class Scene(QtGui.QGraphicsScene):
+class Scene(QtWidgets.QGraphicsScene):
 
     """
     Provides custom implementation of QGraphicsScene
@@ -32,7 +32,7 @@ class Scene(QtGui.QGraphicsScene):
         """Create an instance of this class
 
         """
-        QtGui.QGraphicsScene.__init__(self, parent)
+        QtWidgets.QGraphicsScene.__init__(self, parent)
         self.parent = parent
         self._nodegraph_widget = nodegraph_widget
         self._nodes = []
@@ -235,7 +235,7 @@ class Scene(QtGui.QGraphicsScene):
         """Re-implements mouse press event
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         print("MOUSE PRESS SCENE!")
@@ -248,20 +248,20 @@ class Scene(QtGui.QGraphicsScene):
                     event.accept()
                 return
 
-        QtGui.QGraphicsScene.mousePressEvent(self, event)
+        QtWidgets.QGraphicsScene.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
         """Re-implements mouse move event
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         buttons = event.buttons()
 
         if buttons == QtCore.Qt.LeftButton:
 
-            QtGui.QGraphicsScene.mouseMoveEvent(self, event)
+            QtWidgets.QGraphicsScene.mouseMoveEvent(self, event)
 
             # Edge creation mode?
             if self._is_interactive_edge:
@@ -278,13 +278,13 @@ class Scene(QtGui.QGraphicsScene):
                 for ahash in self._refresh_edges["refresh"]:
                     self._edges_by_hash[ahash].refresh()
         else:
-            return QtGui.QGraphicsScene.mouseMoveEvent(self, event)
+            return QtWidgets.QGraphicsScene.mouseMoveEvent(self, event)
 
     def mouseReleaseEvent(self, event):
         """Re-implements mouse release event
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         # buttons = event.buttons()
@@ -312,13 +312,13 @@ class Scene(QtGui.QGraphicsScene):
         if self._is_rubber_band:
             self.stop_rubber_band()
 
-        QtGui.QGraphicsScene.mouseReleaseEvent(self, event)
+        QtWidgets.QGraphicsScene.mouseReleaseEvent(self, event)
 
     def mouseDoubleClickEvent(self, event):
         """Re-implements doube click event
 
         :param event: Mouse event
-        :type event: :class:`QtGui.QMouseEvent`
+        :type event: :class:`QtWidgets.QMouseEvent`
 
         """
         selected = self.items(event.scenePos())
