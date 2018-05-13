@@ -5,11 +5,21 @@ The main purpose of this project is to provide a full-featured DAG GUI with an u
 
 This is not ready for production and may evolve in many directions without any prior warnings.
 
+# Screenshots
+
+Current simple test scene:
+
+![Simple scene](doc/images/nodegraph-pyqt.png)
+
+Performance test scene:
+
+![Perf scene](doc/images/nodegraph-pyqt_perf.png)
+
 # Requirements
 
 * Python 2.6+
 * PyQt4/Pyside/PyQt5/Pyside2
-(* Networkx TO BE IMPLEMENTED)
+* Networkx (_TO BE IMPLEMENTED_)
 
 # Third party libraries
 
