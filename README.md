@@ -9,11 +9,11 @@ This is not ready for production and may evolve in many directions without any p
 
 Current simple test scene:
 
-![Simple scene](doc/images/nodegraph-pyqt.png)
+![Simple scene](doc/images/nodegraph-pyqt.PNG)
 
 Performance test scene:
 
-![Perf scene](doc/images/nodegraph-pyqt_perf.png)
+![Perf scene](doc/images/nodegraph-pyqt_perf.PNG)
 
 # Requirements
 
