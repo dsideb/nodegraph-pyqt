@@ -118,8 +118,8 @@ class View(QtWidgets.QGraphicsView):
         scene_rect.adjust(-padding, -padding, padding, padding)
 
         # Compare ratio, find resulting scale
-        view_ratio = float(self.size().width()) / float(self.size().height())
-        fit_ratio = scene_rect.width() / scene_rect.height()
+        # view_ratio = float(self.size().width()) / float(self.size().height())
+        # fit_ratio = scene_rect.width() / scene_rect.height()
         x_ratio = scene_rect.width() / float(self.size().width())
         y_ratio = scene_rect.height() / float(self.size().height())
         new_scale = 1 / max(x_ratio, y_ratio)
@@ -141,6 +141,7 @@ class View(QtWidgets.QGraphicsView):
         else:
             # Fit to rectangle while keeping aspect ratio
             self._scale = new_scale
+            print("Fit en view")
             self.fitInView(scene_rect, QtCore.Qt.KeepAspectRatio)
 
     def translate_view(self, offset):
@@ -273,9 +274,11 @@ class View(QtWidgets.QGraphicsView):
         if not modifiers & QtCore.Qt.AltModifier:
             print("R### ALT OFF")
             self.scene()._is_alt_key = False
-            self._is_pan = False
-            self.setRenderHint(QtGui.QPainter.Antialiasing, True)
-            self.setCursor(QtCore.Qt.ArrowCursor)
+
+            if not self.scene()._is_mid_mouse:
+                self._is_pan = False
+                self.setRenderHint(QtGui.QPainter.Antialiasing, True)
+                self.setCursor(QtCore.Qt.ArrowCursor)
 
         if self.scene()._is_shift_key:
             self.setCursor(self.arrow_plus_cursor)
@@ -294,13 +297,22 @@ class View(QtWidgets.QGraphicsView):
 
         """
         # print("MOUSE PRESS VIEW!")
-        self._last_mouse_pos = event.pos()
+        scene = self.scene()  # alias
 
-        if (event.button() == QtCore.Qt.LeftButton and
-                self.scene()._is_alt_key):
+        # Update registars
+        self._last_mouse_pos = event.pos()
+        if event.button() == QtCore.Qt.LeftButton:
+            scene._is_left_mouse = True
+        elif event.button() == QtCore.Qt.MidButton:
+            scene._is_mid_mouse = True
+        elif event.button() == QtCore.Qt.RightButton:
+            scene._is_right_mouse = True
+
+        # Update mode
+        if scene._is_left_mouse and scene._is_alt_key:
             self._is_pan = True
             self.setCursor(QtCore.Qt.OpenHandCursor)
-        elif event.button() == QtCore.Qt.MidButton:
+        elif scene._is_mid_mouse:
             self._is_pan = True
         else:
             return QtWidgets.QGraphicsView.mousePressEvent(self, event)
@@ -330,15 +342,29 @@ class View(QtWidgets.QGraphicsView):
 
         """
         # print("MOUSE RELEASE")
+        scene = self.scene()  # alias
 
+        # Update registars
+        self._last_mouse_pos = event.pos()
+        if event.button() == QtCore.Qt.LeftButton:
+            scene._is_left_mouse = False
+        elif event.button() == QtCore.Qt.MidButton:
+            scene._is_mid_mouse = False
+        elif event.button() == QtCore.Qt.RightButton:
+            scene._is_right_mouse = False
+
+        # Update mode
         if self._is_pan:
-            self.setCursor(QtCore.Qt.OpenHandCursor)
             self._is_pan = False
-        elif self.scene()._is_shift_key and self.scene()._is_ctrl_key:
+
+        # Update mouse icon
+        if scene._is_alt_key:
+            self.setCursor(QtCore.Qt.OpenHandCursor)
+        elif scene._is_shift_key and scene._is_ctrl_key:
             self.setCursor(self.arrow_cross_cursor)
-        elif self.scene()._is_shift_key:
+        elif scene._is_shift_key:
             self.setCursor(self.arrow_plus_cursor)
-        elif self.scene()._is_ctrl_key:
+        elif scene._is_ctrl_key:
             self.setCursor(self.arrow_minus_cursor)
         else:
             self.setCursor(QtCore.Qt.ArrowCursor)
@@ -356,7 +382,7 @@ class View(QtWidgets.QGraphicsView):
         delta = event.delta()
         # p = event.pos()
 
-        scale_factor = pow(1.1, delta / 240.0)
+        scale_factor = pow(1.25, delta / 240.0)
         self.scale_view(scale_factor)
         event.accept()
 
@@ -374,6 +400,9 @@ class View(QtWidgets.QGraphicsView):
 
     def focusOutEvent(self, event):
         """Re-implement focusOutEvent from the base class
+
+        Prevent pan mode to stay on when loosing focus to anything outside
+        of view
 
         :param event: Focus event
         :type event: :class:`QtWidgets.QFocusEvent`

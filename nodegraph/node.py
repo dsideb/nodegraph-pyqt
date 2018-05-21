@@ -97,7 +97,7 @@ class Node(QtWidgets.QGraphicsItem):
         self._output.rect = QtCore.QRectF(self._draw_slot).translated(
             self._width - self._slot_radius, init_y)
 
-        # # Update inputs
+        # Update inputs
         init_y = base_y - slot_height * len(self._inputs) / 2
         for i, _input in enumerate(self._inputs):
             self._inputs[i].rect = QtCore.QRectF(self._draw_slot).translated(
@@ -304,6 +304,24 @@ class Node(QtWidgets.QGraphicsItem):
 
         QtWidgets.QGraphicsItem.mousePressEvent(self, event)
 
+    # def mouseReleaseEvent(self, event):
+    #     """Re-implement mouseReleaseEvent from base class
+
+    #     :param event: Mouse event
+    #     :type event: :class:`QtWidgets.QGraphicsSceneMouseEvent`
+
+    #     """
+    #     buttons = event.button()
+
+    #     if buttons == QtCore.Qt.LeftButton:
+    #         # if self._output._rect.contains(event.pos()):
+    #         print(self._output._rect.contains(event.pos()))
+    #         print("DROP")
+    #         print(event.pos())
+    #         print(self._output._rect)
+
+    #     QtWidgets.QGraphicsItem.mouseReleaseEvent(self, event)
+
     def mouseMoveEvent(self, event):
         """Re-implement mouseMoveEvent from base class
 
@@ -314,11 +332,13 @@ class Node(QtWidgets.QGraphicsItem):
         buttons = event.buttons()
         # modifiers = event.modifiers()
 
+        print("%s : mouse move event. Hover slot: %s" %(self._name, self._hover_slot))
+
         if buttons == QtCore.Qt.LeftButton:
             if self.scene().is_interactive_edge:
                 # Edge creation mode
 
-                print("Node Name: %s, pos: %s" % (self._name, event.pos()))
+                # print("Node Name: %s, pos: %s" % (self._name, event.pos()))
                 event.accept()
                 return
 

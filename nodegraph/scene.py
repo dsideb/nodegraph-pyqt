@@ -42,10 +42,15 @@ class Scene(QtWidgets.QGraphicsScene):
         self._interactive_edge = None
         self._refresh_edges = {}
         self._rubber_band = None
+
+        # Registars
         self._is_rubber_band = False
         self._is_shift_key = False
         self._is_ctrl_key = False
         self._is_alt_key = False
+        self._is_left_mouse = False
+        self._is_mid_mouse = False
+        self._is_right_mouse = False
 
         # Redefine palette
         self.setBackgroundBrush(QtGui.QColor(60, 60, 60))
@@ -113,13 +118,13 @@ class Scene(QtWidgets.QGraphicsScene):
         else:
             # Re-use existing interactive edge
             self._interactive_edge.refresh(mouse_pos, source_slot)
-            self._interactive_edge.setVisible(True)
 
     def stop_interactive_edge(self, connect_to=None):
         """Hide the interactive and create an edge between the source slot
         and the slot given by connect_to
 
         """
+        self._is_interactive_edge = False
         if connect_to:
             eh = self._edges_by_hash  # shortcut
             source = self._interactive_edge._source_slot
@@ -169,8 +174,10 @@ class Scene(QtWidgets.QGraphicsScene):
                 # TO DO: Send info to status bar
                 pass
 
-        self._is_interactive_edge = False
-        self._interactive_edge.setVisible(False)
+        # Delete item (to be sure it's not taken into account by any function
+        # including but not limited to fitInView)
+        self.removeItem(self._interactive_edge)
+        self._interactive_edge = None
 
     def start_rubber_band(self, init_pos):
         """Create/Enable custom rubber band
@@ -186,15 +193,13 @@ class Scene(QtWidgets.QGraphicsScene):
         else:
             # Re-use existing rubber band
             self._rubber_band.refresh(mouse_pos=init_pos, init_pos=init_pos)
-            self._rubber_band.setVisible(True)
 
-    def stop_rubber_band(self):
+    def stop_rubber_band(self, intersect=None):
         """Hide the custom rubber band and if it contains node/edges select
         them
 
         """
         self._is_rubber_band = False
-        self._rubber_band.setVisible(False)
 
         # Select nodes and edges inside the rubber band
         if self._is_shift_key and self._is_ctrl_key:
@@ -207,7 +212,10 @@ class Scene(QtWidgets.QGraphicsScene):
             self._rubber_band.update_scene_selection(
                 self._rubber_band.MINUS_SELECTION)
         else:
-            self._rubber_band.update_scene_selection()
+            self._rubber_band.update_scene_selection(intersect)
+
+        self.removeItem(self._rubber_band)
+        self._rubber_band = None
 
     def delete_selected(self):
         """Delete selected nodes and edges
@@ -247,6 +255,26 @@ class Scene(QtWidgets.QGraphicsScene):
                 if self._is_shift_key or self._is_ctrl_key:
                     event.accept()
                 return
+            else:
+                if self._is_shift_key or self._is_ctrl_key:
+                    # Mouse is above scene items and single click with modfiers
+                    event.accept()
+
+                    if self._is_shift_key and self._is_ctrl_key:
+                        for item in self.items(event.scenePos()):
+                            item.setSelected(not item.isSelected())
+                    elif self._is_shift_key:
+                        for item in self.items(event.scenePos()):
+                            item.setSelected(True)
+                    elif self._is_ctrl_key:
+                        for item in self.items(event.scenePos()):
+                            item.setSelected(False)
+
+                    return
+        else:
+            # Items under mouse during edge creation, We may have to start an
+            # interactive edge
+            pass
 
         QtWidgets.QGraphicsScene.mousePressEvent(self, event)
 

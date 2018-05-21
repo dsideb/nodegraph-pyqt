@@ -84,3 +84,15 @@ Performance influenced design:
    * Check Deletions of a connected node (automatic re-connection)
    * Check saving a graph
    * check loading a graph
+
+   BUGS:
+
+   ✔ Hidden Rubberband and interactive edge are taken into account for fitInView @done (18-05-20 12:20)
+   ☐ Can't connect anymore to specific input (always use the connect_to_next_available)
+   ☐ When trying to connect on a input slot already connected, replace connection.
+
+Next thing to do:
+  Move node mousePresseEvent input/output detection to public function that requires a point in scene coordinates
+  Move start_interactive_edge from node.py to scene.py in MousePressEvent.
+  In scene.py, mouseReleaseEvent, use utility function to detect if drop in slot.
+  Remove complex/useless self._hover_slot (which is not updated anyway when in interactive_edge mode)
